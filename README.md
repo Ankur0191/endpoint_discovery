@@ -167,3 +167,58 @@ When you upload a raw endpoint scan, the dashboard runs the local offline analyz
 
 The scale tab recalculates illustrative traffic and storage figures from editable assumptions. It does not estimate an actual cloud bill or claim to reveal private database size.
 
+
+
+## Group-level subsidiary and domain intelligence
+
+The repository also includes a group-level workflow for Ten Technologies Group. Its scope file contains the 24 subsidiaries disclosed in the FY2025 Annual Report (18 operating and 6 dormant as at 31 August 2025), two separately listed branch entries, and four domains described in Ten's current official FAQ. The entity register is historical to the reporting date; verify current legal status before using it as a current corporate register.
+
+Install the optional DNS dependency:
+
+~~~powershell
+python -m pip install -r requirements-intelligence.txt
+~~~
+
+Run the default low-impact discovery workflow:
+
+~~~powershell
+python group_intelligence.py --config ten_group_scope.json --output-dir intelligence_output --max-hosts 200
+~~~
+
+This queries public certificate-transparency records for hostnames and resolves DNS metadata (A/AAAA/CNAME for hostnames; NS/MX/TXT/SOA for root domains). It does not crawl discovered hostnames. The output directory contains:
+
+- scope_discovery.json — discovered hostnames, certificate record counts, DNS records, public IPs, DNS provider hints, shared-IP groupings and hostname role clues.
+- group_intelligence_report.json and .md — subsidiary/domain inventory plus discovery findings and explicit limitations.
+
+Optional root-path HTTP metadata (one HTTPS HEAD / request per eligible host, up to 30 hosts; no redirects or response bodies):
+
+~~~powershell
+python group_intelligence.py --config ten_group_scope.json --output-dir intelligence_output --max-hosts 200 --http-metadata
+~~~
+
+### Browser scans for subsidiaries or member-facing services
+
+Certificate-transparency and DNS discovery can reveal hostnames, but it does not prove which subsidiary owns a host or whether the host is in scope. Review the owner's written authorization first. Then edit ten_group_scope.json:
+
+1. Add each exact owner-approved URL under authorized_scan_targets.
+2. Set the correct entity label/key only when Ten confirms the system-to-entity relationship.
+3. Add an approved_origins entry only for API origins explicitly listed in the authorization.
+4. Keep client-branded portals, member portals, and other hosts out of the list unless the written scope explicitly includes them.
+
+Then run:
+
+~~~powershell
+python group_intelligence.py --config ten_group_scope.json --output-dir intelligence_output --max-hosts 200 --scan-authorized --confirm-authorized-scope
+~~~
+
+The explicit confirmation flag is required. Browser scans are performed sequentially with a bounded page limit, low concurrency, normal page navigation and the existing endpoint mapper's redaction rules. Each target gets separate endpoint-map and intelligence JSON/Markdown files, in addition to the group roll-up. For authenticated journeys, use a dedicated test account and configure its local Playwright storage-state file only on the specific approved target; never commit that file.
+
+### What the discovery can and cannot tell you
+
+- DNS CNAME/NS/MX clues may indicate a CDN, DNS provider, email provider or hosting ecosystem. Shared public IPs may be shared infrastructure; they do not prove common databases.
+- Hostnames containing labels such as db, postgres, redis or mongo are recorded as naming clues only. The tool never connects to those services, performs port scans, tests credentials, sends database queries or retrieves application data.
+- Actual database size, schema, row count, replica count, query performance and cloud costs cannot be measured from public DNS or a public marketing-site scan.
+- To estimate those internal values defensibly, ask the system owner for aggregated database/storage metrics, table-size summaries, anonymised request volume, peak concurrency, retention/backup policy and redacted cloud-cost allocations.
+- Discovered domains remain group-level and unattributed until the owner confirms the mapping to a subsidiary or application.
+
+For the existing dashboard, upload group_intelligence_report.json to see the new Group & subdomains view alongside the endpoint and architecture tabs.
