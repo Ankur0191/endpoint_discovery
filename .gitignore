@@ -12,3 +12,6 @@ architecture_intelligence*.md
 # Vite frontend
 web_dashboard/node_modules/
 web_dashboard/dist/
+intelligence_output/
+group_intelligence_report*.json
+group_intelligence_report*.md
