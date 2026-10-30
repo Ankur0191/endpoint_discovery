@@ -55,6 +55,171 @@
       "definition_or_caveat": "Approximately £16.1m expected; not a technology or cloud budget.",
       "source_url": "https://www.londonstockexchange.com/en/news/article/TENG/full-year-2026-trading-update/17788737",
       "source_date": "2026-09-16"
+    },
+    {
+      "key": "active_members_h1_2026",
+      "label": "Active Members",
+      "value": 436000,
+      "unit": "people",
+      "period": "H1 FY2026, period ended 28 February 2026",
+      "status": "company_disclosed",
+      "definition_or_caveat": "Active Members are users who used the platform in the previous twelve months; not monthly active users.",
+      "source_url": "https://tenlifestylegroup.com/2026/04/22/we-are-pleased-to-announce-results-for-h1-2026/",
+      "source_date": "2026-04-22"
+    },
+    {
+      "key": "fy2025_tech_content_communications_investment",
+      "label": "Investment in technology, content and communications",
+      "value": 12.6,
+      "unit": "GBP_millions",
+      "period": "FY2025 year ended 31 August 2025",
+      "status": "company_disclosed_annual_report",
+      "definition_or_caveat": "Broad investment measure: includes proprietary digital platforms, technology, content and communications. It is not cloud/database spend.",
+      "source_url": "https://tenlifestylegroup.com/wp-content/uploads/2025/11/Ten-Lifestyle-Group-Plc-Annual-Report-and-Accounts-2025-2_compressed.pdf",
+      "source_date": "2025-11-28"
+    },
+    {
+      "key": "h1_2026_tech_content_communications_investment",
+      "label": "Investment in proprietary digital platforms, communications and technologies",
+      "value": 6.3,
+      "unit": "GBP_millions",
+      "period": "H1 FY2026, six months ended 28 February 2026",
+      "status": "company_disclosed_interim_results",
+      "definition_or_caveat": "This broad investment measure is not cloud/database spend. A simple 2x annualisation is a run-rate illustration, not a forecast.",
+      "source_url": "https://tenlifestylegroup.com/2026/04/22/we-are-pleased-to-announce-results-for-h1-2026/",
+      "source_date": "2026-04-22"
+    },
+    {
+      "key": "h1_2026_capitalised_development_spend",
+      "label": "Capitalised development spend",
+      "value": 3.4,
+      "unit": "GBP_millions",
+      "period": "H1 FY2026, six months ended 28 February 2026",
+      "status": "company_disclosed_interim_results",
+      "definition_or_caveat": "Part of the £6.3m technology/platform/content/communications investment; capitalisation is an accounting treatment, not a cloud bill.",
+      "source_url": "https://tenlifestylegroup.com/2026/04/22/we-are-pleased-to-announce-results-for-h1-2026/",
+      "source_date": "2026-04-22"
+    },
+    {
+      "key": "fy2025_capitalised_development_additions",
+      "label": "Capitalised development cost additions",
+      "value": 6.705,
+      "unit": "GBP_millions",
+      "period": "FY2025, year ended 31 August 2025",
+      "status": "audited_annual_report_note_17",
+      "definition_or_caveat": "Internal expenditure added to the gross capitalised development asset during FY2025; not annual cloud operating cost.",
+      "source_url": "https://tenlifestylegroup.com/wp-content/uploads/2025/11/Ten-Lifestyle-Group-Plc-Annual-Report-and-Accounts-2025-2_compressed.pdf",
+      "source_date": "2025-11-28"
+    },
+    {
+      "key": "fy2025_capitalised_development_gross_cost",
+      "label": "Gross capitalised development costs",
+      "value": 61.96,
+      "unit": "GBP_millions",
+      "period": "At 31 August 2025",
+      "status": "audited_annual_report_note_17",
+      "definition_or_caveat": "Historical gross cost balance before accumulated amortisation and disposals. Not database size, replacement cost, or market value.",
+      "source_url": "https://tenlifestylegroup.com/wp-content/uploads/2025/11/Ten-Lifestyle-Group-Plc-Annual-Report-and-Accounts-2025-2_compressed.pdf",
+      "source_date": "2025-11-28"
+    },
+    {
+      "key": "fy2025_capitalised_development_net_carrying_amount",
+      "label": "Net carrying amount of capitalised development costs",
+      "value": 16.749,
+      "unit": "GBP_millions",
+      "period": "At 31 August 2025",
+      "status": "audited_annual_report_note_17",
+      "definition_or_caveat": "Gross capitalised development cost less accumulated amortisation. This is an accounting book value for software development assets, not database or infrastructure valuation.",
+      "source_url": "https://tenlifestylegroup.com/wp-content/uploads/2025/11/Ten-Lifestyle-Group-Plc-Annual-Report-and-Accounts-2025-2_compressed.pdf",
+      "source_date": "2025-11-28"
+    },
+    {
+      "key": "fy2025_average_employees",
+      "label": "Average monthly employees",
+      "value": 1188,
+      "unit": "people",
+      "period": "FY2025",
+      "status": "audited_annual_report_note_8",
+      "definition_or_caveat": "Average monthly persons employed including directors: 191 UK and 997 international. Not a count of technology employees.",
+      "source_url": "https://tenlifestylegroup.com/wp-content/uploads/2025/11/Ten-Lifestyle-Group-Plc-Annual-Report-and-Accounts-2025-2_compressed.pdf",
+      "source_date": "2025-11-28"
+    },
+    {
+      "key": "fy2025_employee_remuneration",
+      "label": "Aggregate employee remuneration",
+      "value": 43.162,
+      "unit": "GBP_millions",
+      "period": "FY2025",
+      "status": "audited_annual_report_note_8",
+      "definition_or_caveat": "Wages, salaries, social security, pension and share-based payments for the Group workforce. Not technology payroll alone.",
+      "source_url": "https://tenlifestylegroup.com/wp-content/uploads/2025/11/Ten-Lifestyle-Group-Plc-Annual-Report-and-Accounts-2025-2_compressed.pdf",
+      "source_date": "2025-11-28"
+    },
+    {
+      "key": "digital_platform_geographic_coverage",
+      "label": "Ten Digital Platform availability",
+      "value": "60 countries; 22 languages; 43 currencies",
+      "unit": "text",
+      "period": "FY2025 annual report",
+      "status": "company_disclosed",
+      "definition_or_caveat": "Platform availability scale; does not prove separate data-centre regions or database replication topology.",
+      "source_url": "https://tenlifestylegroup.com/annual-report-accounts-2025/",
+      "source_date": "2025-11-28"
+    },
+    {
+      "key": "corporate_client_and_supplier_scale",
+      "label": "Corporate client and supplier ecosystem",
+      "value": "50+ corporate clients; thousands of suppliers; 20+ global service locations",
+      "unit": "text",
+      "period": "FY2025 annual report",
+      "status": "company_disclosed",
+      "definition_or_caveat": "Company-reported ecosystem scale. It does not disclose rows, records, contracts or per-client active usage.",
+      "source_url": "https://tenlifestylegroup.com/annual-report-accounts-2025/",
+      "source_date": "2025-11-28"
+    },
+    {
+      "key": "ten_data_engineer_advertised_stack",
+      "label": "Tools named in Ten Data Engineer vacancy",
+      "value": "SQL, Python, AWS Lambda, AWS ECS, Airflow, Snowflake, MS SQL Server, PostgreSQL, GitHub and Jira",
+      "unit": "text",
+      "period": "Public Data Engineer job advertisement, reposted approximately one month before 30 October 2026",
+      "status": "advertised_role_stack_not_deployment_attestation",
+      "definition_or_caveat": "The advert labels these tools as 'Our Tech Stack' and describes pipelines, central data store, APIs/feeds, database optimisation and AWS or equivalent. This is evidence of advertised team requirements, not proof every production service uses all of them.",
+      "source_url": "https://builtin.com/job/data-engineer/10174757",
+      "source_date": "2026-09"
+    },
+    {
+      "key": "ten_data_engineer_responsibility_model",
+      "label": "Data platform responsibilities described in vacancy",
+      "value": "Data ingestion, normalisation, transformation, unified central data store, APIs/data feeds, data quality/governance, analytics delivery and database performance optimisation",
+      "unit": "text",
+      "period": "Public Data Engineer job advertisement",
+      "status": "advertised_role_responsibilities",
+      "definition_or_caveat": "Describes the advertised team's remit; not a published architecture diagram.",
+      "source_url": "https://builtin.com/job/data-engineer/10174757",
+      "source_date": "2026-09"
+    },
+    {
+      "key": "named_member_and_staff_products",
+      "label": "Named internal/member-facing products",
+      "value": "Ten MAID (internal CRM/request management), Talia (AI-powered member assistant), Ten Copilot (agent assistant), Ten PX (member engagement/personalisation)",
+      "unit": "text",
+      "period": "H1 FY2026 company results",
+      "status": "company_disclosed",
+      "definition_or_caveat": "These product roles imply distinct operational data domains and workflows but do not disclose schemas, storage engines or service boundaries.",
+      "source_url": "https://tenlifestylegroup.com/2026/04/22/we-are-pleased-to-announce-results-for-h1-2026/",
+      "source_date": "2026-04-22"
+    },
+    {
+      "key": "h1_2026_operating_expenses_per_request_change",
+      "label": "Operating expenses per request",
+      "value": "Down 9% year on year",
+      "unit": "text",
+      "period": "H1 FY2026",
+      "status": "company_disclosed",
+      "definition_or_caveat": "Company KPI statement; the public announcement does not define the request denominator or disclose request volumes.",
+      "source_url": "https://tenlifestylegroup.com/2026/04/22/we-are-pleased-to-announce-results-for-h1-2026/",
+      "source_date": "2026-04-22"
     }
   ]
 }
