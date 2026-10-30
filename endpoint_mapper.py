@@ -24,8 +24,28 @@ from playwright.async_api import (
     Page,
     Request,
     Response,
-    TargetClosedError,
 )
+
+class BrowserSessionClosedError(RuntimeError):
+    """Raised when Playwright reports that a page, context, or browser closed."""
+
+
+def is_target_closed_error(exc: BaseException) -> bool:
+    """Recognize Playwright target-closed errors across package versions.
+
+    TargetClosedError is not exported by every Playwright version, so avoid
+    importing that optional symbol and inspect the exception safely instead.
+    """
+    class_name = type(exc).__name__.lower()
+    message = str(exc).lower()
+    return (
+        "targetclosed" in class_name
+        or "target page, context or browser has been closed" in message
+        or "target page, context or browser was closed" in message
+        or "browser has been closed" in message
+        or "context has been closed" in message
+    )
+
 
 SENSITIVE_QUERY_KEYS = re.compile(
     r"(token|access_token|refresh_token|auth|authorization|session|key|secret|password|code|jwt|sig|signature)",
@@ -318,10 +338,11 @@ class EndpointMapper:
                     if path.endswith(SKIP_EXTENSIONS) or SENSITIVE_PATH.search(path):
                         continue
                     outgoing.append(clean)
-        except TargetClosedError:
-            # The worker will recover the browser/context if needed and retry.
-            raise
         except Exception as exc:
+            if is_target_closed_error(exc):
+                # Convert to our own stable exception; the concrete Playwright
+                # exception is not exported by all installed versions.
+                raise BrowserSessionClosedError(str(exc)) from exc
             error = str(exc)[:500]
             self.errors.append({"url": clean_url, "error": error})
         finally:
@@ -425,11 +446,11 @@ class EndpointMapper:
                                 ):
                                     await recover_session("browser/context unavailable before navigation")
                                 if context is None:
-                                    raise TargetClosedError("No active browser context")
+                                    raise BrowserSessionClosedError("No active browser context")
                                 discovered = await self.crawl_one(context, url, depth, parent)
                                 completed = True
                                 break
-                            except TargetClosedError as exc:
+                            except BrowserSessionClosedError as exc:
                                 self.visited.discard(clean_url)
                                 if attempt == 1:
                                     self.errors.append({
@@ -477,7 +498,7 @@ class EndpointMapper:
                     ):
                         await recover_session("browser/context unavailable before manual exploration")
                     if context is None:
-                        raise TargetClosedError("No active browser context for manual exploration")
+                        raise BrowserSessionClosedError("No active browser context for manual exploration")
                     page = await context.new_page()
                     await self.attach_observers(page)
                     try:
