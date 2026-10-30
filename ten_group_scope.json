@@ -1,0 +1,276 @@
+{
+  "profile": "Ten Technologies Group plc (formerly Ten Lifestyle Group plc)",
+  "scope_version": "1.0",
+  "evidence_cutoff": "2026-10-30",
+  "notes": [
+    "The subsidiary register is copied from the FY2025 Annual Report, Note 20, and is dated 31 August 2025. It is not a certification of current legal status in FY2026.",
+    "All 24 entities in the FY2025 subsidiary schedule had 100% ownership and 100% voting power. Six are marked dormant; 18 are operating subsidiaries.",
+    "The two branch entries are disclosed in the registered-office continuation table and are recorded separately from the 24 incorporated subsidiaries.",
+    "The four domains below are named in Ten's current official FAQ as group corporate/business-development or member-service domains. Domain-level ownership does not establish that every underlying application or system is in security-assessment scope.",
+    "Only entries under authorized_scan_targets are eligible for browser crawling. Do not add a member portal, client-branded portal, API host or subsidiary domain without written scope approval from the system owner.",
+    "No database protocol, admin interface, authentication flow, port, or private service is contacted by the discovery workflow. Database-like hostname labels are recorded only as naming clues."
+  ],
+  "sources": [
+    {
+      "label": "FY2025 Annual Report and Accounts, Note 20 (subsidiaries at 31 August 2025)",
+      "url": "https://tenlifestylegroup.com/wp-content/uploads/2025/11/Ten-Lifestyle-Group-Plc-Annual-Report-and-Accounts-2025-2_compressed.pdf",
+      "date": "2025-11-11",
+      "details": "Pages 89-90 of the printed report; subsidiary schedule lists legal name, incorporation country, ownership, voting power and nature of business."
+    },
+    {
+      "label": "Ten official FAQ - relationship between group and service domains",
+      "url": "https://tenlifestylegroup.com/faqs/",
+      "date": "2026-10-30",
+      "details": "Describes tenlifestylegroup.com and tengroup.com as corporate/business-development websites, ten-membership.com as the member-facing service marketing site, and tenconcierge.com as a private-member access domain operated by Ten Lifestyle Management Limited."
+    }
+  ],
+  "subsidiaries": [
+    {
+      "name": "Ten Lifestyle Management Limited",
+      "country": "United Kingdom",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Concierge services",
+      "status_at_2025_08_31": "operating"
+    },
+    {
+      "name": "Ten Lifestyle Management (Asia) Limited",
+      "country": "Hong Kong",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Concierge services",
+      "status_at_2025_08_31": "operating"
+    },
+    {
+      "name": "Ten Lifestyle Management USA Inc.",
+      "country": "United States",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Concierge services",
+      "status_at_2025_08_31": "operating"
+    },
+    {
+      "name": "Ten Lifestyle Management (Canada) ULC",
+      "country": "Canada",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Concierge services",
+      "status_at_2025_08_31": "operating"
+    },
+    {
+      "name": "Ten Group Singapore PTE Limited",
+      "country": "Singapore",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Concierge services",
+      "status_at_2025_08_31": "operating"
+    },
+    {
+      "name": "Ten Group Japan K.K.",
+      "country": "Japan",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Concierge services",
+      "status_at_2025_08_31": "operating"
+    },
+    {
+      "name": "Ten Lifestyle Commercial Consulting (China)",
+      "country": "China",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Concierge services",
+      "status_at_2025_08_31": "operating"
+    },
+    {
+      "name": "Ten Shanghai Travel",
+      "country": "China",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Concierge services",
+      "status_at_2025_08_31": "operating"
+    },
+    {
+      "name": "Ten Lifestyle Management Limited S DE RL DE CV",
+      "country": "Mexico",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Concierge services",
+      "status_at_2025_08_31": "operating"
+    },
+    {
+      "name": "Ten Lifestyle Management Africa (Pty) Limited",
+      "country": "South Africa",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Concierge services",
+      "status_at_2025_08_31": "operating"
+    },
+    {
+      "name": "Ten Lifestyle Management India Private Limited",
+      "country": "India",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Technology and development",
+      "status_at_2025_08_31": "operating"
+    },
+    {
+      "name": "Ten Servicos de Concierge do Brasil Limited",
+      "country": "Brazil",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Concierge services",
+      "status_at_2025_08_31": "operating"
+    },
+    {
+      "name": "Ten LS Management Colombia SAS",
+      "country": "Colombia",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Concierge services",
+      "status_at_2025_08_31": "operating"
+    },
+    {
+      "name": "Ten Group Belgium BVBA",
+      "country": "Belgium",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Concierge services",
+      "status_at_2025_08_31": "operating"
+    },
+    {
+      "name": "Ten Group Australia Pty Limited",
+      "country": "Australia",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Concierge services",
+      "status_at_2025_08_31": "operating"
+    },
+    {
+      "name": "Ten Lifestyle Management Switzerland GmbH",
+      "country": "Switzerland",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Concierge services",
+      "status_at_2025_08_31": "operating"
+    },
+    {
+      "name": "Ten Group France SAS",
+      "country": "France",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Concierge services",
+      "status_at_2025_08_31": "operating"
+    },
+    {
+      "name": "Ten Group Norway AS",
+      "country": "Norway",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Concierge services",
+      "status_at_2025_08_31": "operating"
+    },
+    {
+      "name": "Ten Latin America Limited",
+      "country": "United Kingdom",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Dormant",
+      "status_at_2025_08_31": "dormant"
+    },
+    {
+      "name": "Ten South America Limited",
+      "country": "United Kingdom",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Dormant",
+      "status_at_2025_08_31": "dormant"
+    },
+    {
+      "name": "Ten Global Services Limited",
+      "country": "United Kingdom",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Dormant",
+      "status_at_2025_08_31": "dormant"
+    },
+    {
+      "name": "Ten Travel Limited",
+      "country": "United Kingdom",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Dormant",
+      "status_at_2025_08_31": "dormant"
+    },
+    {
+      "name": "Ten Professional Services Limited",
+      "country": "United Kingdom",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Dormant",
+      "status_at_2025_08_31": "dormant"
+    },
+    {
+      "name": "Bailey Medical Support Limited",
+      "country": "United Kingdom",
+      "ownership_percent": 100,
+      "voting_power_percent": 100,
+      "activity": "Dormant",
+      "status_at_2025_08_31": "dormant"
+    }
+  ],
+  "branches": [
+    {
+      "name": "Ten Lifestyle Argentina (Branch)",
+      "country": "Argentina",
+      "note": "Listed in the FY2025 subsidiary registered-office continuation table as a branch; not counted among the 24 incorporated subsidiaries."
+    },
+    {
+      "name": "Ten Lifestyle Management Ltd (DMCC) (Branch)",
+      "country": "United Arab Emirates",
+      "note": "Listed in the FY2025 subsidiary registered-office continuation table as a branch; not counted among the 24 incorporated subsidiaries."
+    }
+  ],
+  "domains": [
+    {
+      "domain": "tenlifestylegroup.com",
+      "relationship": "Current corporate website and group digital presence",
+      "evidence_url": "https://tenlifestylegroup.com/faqs/",
+      "discovery_only": true
+    },
+    {
+      "domain": "tengroup.com",
+      "relationship": "Corporate and business-development website",
+      "evidence_url": "https://tenlifestylegroup.com/faqs/",
+      "discovery_only": true
+    },
+    {
+      "domain": "ten-membership.com",
+      "relationship": "Member-facing service marketing domain",
+      "evidence_url": "https://tenlifestylegroup.com/faqs/",
+      "discovery_only": true
+    },
+    {
+      "domain": "tenconcierge.com",
+      "relationship": "Private-member access domain; FAQ says operated by Ten Lifestyle Management Limited",
+      "evidence_url": "https://tenlifestylegroup.com/faqs/",
+      "discovery_only": true
+    }
+  ],
+  "entity_domain_mappings": [],
+  "authorized_scan_targets": [
+    {
+      "url": "https://tenlifestylegroup.com/",
+      "entity": "Group corporate website",
+      "scope_status": "previously_scanned_public_site; reconfirm the written scope before each new run",
+      "approved_origins": []
+    }
+  ],
+  "scan_settings": {
+    "max_pages": 180,
+    "max_depth": 3,
+    "delay_seconds": 0.5,
+    "concurrency": 4,
+    "browser_restarts": 1,
+    "manual_exploration_seconds": 0
+  }
+}
