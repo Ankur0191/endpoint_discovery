@@ -333,7 +333,9 @@ def discover_scope(
 
     ordered_hosts = sorted(all_hosts)
     truncated = len(ordered_hosts) > max_hosts
-    selected = ordered_hosts[:max_hosts]
+    # Always resolve every configured root before filling the remaining budget.
+    selected = list(roots[:max_hosts])
+    selected.extend(host for host in ordered_hosts if host not in set(selected) and len(selected) < max_hosts)
     dns_rows: dict[str, dict[str, Any]] = {}
     with concurrent.futures.ThreadPoolExecutor(max_workers=min(16, max(1, len(selected)))) as pool:
         futures = {pool.submit(_query_dns, host, all_hosts[host]["root_domain"]): host for host in selected}
@@ -398,7 +400,7 @@ def discover_scope(
         "root_domains": roots,
         "certificate_transparency": root_results,
         "host_count_discovered": len(all_hosts),
-        "host_count_resolved": len(selected),
+        "host_count_processed": len(selected),
         "host_limit": max_hosts,
         "host_list_truncated": truncated,
         "hosts": hosts,
