@@ -41,6 +41,18 @@ python -m pip install -r requirements.txt
 python -m playwright install chromium
 \`\`\`
 
+## Updating an existing checkout
+
+After pulling code changes, upgrade dependencies with the same Python interpreter that you use to run the script, then install the matching browser binary:
+
+```powershell
+git pull origin main
+python -m pip install --upgrade -r requirements.txt
+python -m playwright install chromium
+```
+
+Using `python -m pip` avoids upgrading a different Python installation from the one running the scanner.
+
 ## Run
 
 Basic crawl:
