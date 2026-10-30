@@ -585,7 +585,7 @@ def parse_args() -> argparse.Namespace:
         or args.concurrency < 1
         or args.concurrency > 15
     ):
-        parser.error("Invalid negative limit or duration")
+        parser.error("Invalid limit: concurrency must be 1-15; other limits must be non-negative")
     return args
 
 
