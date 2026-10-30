@@ -52,7 +52,7 @@ python endpoint_mapper.py https://example.com --max-pages 150 --max-depth 3 --ou
 Visible browser with time to sign in and explore manually:
 
 \`\`\`bash
-python endpoint_mapper.py https://example.com --headed --manual-seconds 180 --max-pages 200 --output endpoint_map.json
+python endpoint_mapper.py https://example.com --headed --manual-seconds 180 --max-pages 200 --concurrency 15 --output endpoint_map.json
 \`\`\`
 
 Use an existing Playwright storage-state file from an authorized test account:
