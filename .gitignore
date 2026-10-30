@@ -8,3 +8,7 @@ playwright-report/
 
 architecture_intelligence*.json
 architecture_intelligence*.md
+
+# Vite frontend
+web_dashboard/node_modules/
+web_dashboard/dist/
