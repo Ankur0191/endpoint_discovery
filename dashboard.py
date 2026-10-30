@@ -487,6 +487,126 @@ def render_facts(report: dict[str, Any]) -> None:
         st.caption("These disclosures cover broader technology/platform, content and communications investment. They are not a cloud/database bill.")
 
 
+def render_group_scope(report: dict[str, Any]) -> None:
+    group = report.get("group_scope", {})
+    discovery = report.get("scope_discovery", {})
+    if not group and not discovery:
+        st.info("Load a group_intelligence_report.json to see the legal-entity register and public subdomain/DNS inventory.")
+        return
+
+    subsidiaries = as_list(group.get("subsidiaries"))
+    operating = sum(1 for item in subsidiaries if item.get("status_at_2025_08_31") == "operating")
+    dormant = sum(1 for item in subsidiaries if item.get("status_at_2025_08_31") == "dormant")
+    hosts = as_list(discovery.get("hosts"))
+    candidates = as_list(discovery.get("database_named_hostname_candidates"))
+    domains = as_list(group.get("domains"))
+
+    metrics = st.columns(4)
+    for col, label, value in zip(
+        metrics,
+        ["Subsidiaries in FY2025 register", "Operating at 31 Aug 2025", "Dormant at 31 Aug 2025", "Hostnames discovered"],
+        [len(subsidiaries), operating, dormant, discovery.get("host_count_discovered", 0)]
+    ):
+        with col:
+            st.metric(label, f"{value:,}")
+
+    st.caption("The subsidiary register is historical to 31 August 2025. A legal entity is not automatically a separate website, application or infrastructure boundary.")
+    if subsidiaries:
+        st.markdown("### Subsidiary register")
+        entity_df = pd.DataFrame([{
+            "Legal entity": item.get("name"),
+            "Country": item.get("country"),
+            "Activity": item.get("activity"),
+            "Status at 31 Aug 2025": item.get("status_at_2025_08_31"),
+            "Ownership %": item.get("ownership_percent"),
+            "Voting power %": item.get("voting_power_percent")
+        } for item in subsidiaries])
+        st.dataframe(entity_df, use_container_width=True, hide_index=True, height=360)
+
+    branches = as_list(group.get("branches"))
+    if branches:
+        st.markdown("### Branches disclosed separately")
+        st.dataframe(pd.DataFrame(branches), use_container_width=True, hide_index=True)
+
+    if domains:
+        st.markdown("### Ten service and corporate domains")
+        st.dataframe(pd.DataFrame([{
+            "Domain": item.get("domain"),
+            "Disclosed relationship": item.get("relationship"),
+            "Discovery seed": "Yes"
+        } for item in domains]), use_container_width=True, hide_index=True)
+
+    st.markdown("### Discovered hostnames and infrastructure clues")
+    if hosts:
+        host_df = pd.DataFrame([{
+            "Hostname": item.get("hostname"),
+            "Root domain": item.get("root_domain"),
+            "Public IPs": ", ".join(item.get("public_ip_addresses", [])),
+            "CNAME": ", ".join(item.get("dns", {}).get("cname", [])),
+            "Provider hints": ", ".join(item.get("provider_hints", [])),
+            "Role hints": ", ".join(item.get("hostname_role_hints", [])),
+            "Database-like name": "Yes — name clue only" if item.get("database_named_hostname_candidate") else "No"
+        } for item in hosts])
+        host_search = st.text_input("Filter discovered hostnames", placeholder="e.g. api, member, db, stage", key="group_host_filter")
+        if host_search:
+            mask = host_df.astype(str).apply(lambda col: col.str.contains(host_search, case=False, na=False)).any(axis=1)
+            host_df = host_df[mask]
+        st.caption(f"Showing {len(host_df):,} hostname records. CT entries may be historical; DNS resolution is not proof that a web application is live.")
+        st.dataframe(host_df, use_container_width=True, hide_index=True, height=420)
+        st.download_button(
+            "Download hostname inventory CSV",
+            data=host_df.to_csv(index=False).encode("utf-8"),
+            file_name="ten_group_hostname_inventory.csv",
+            mime="text/csv"
+        )
+    else:
+        st.info("No hostnames were included in this group report. Run group_intelligence.py to build the CT/DNS inventory.")
+
+    if candidates:
+        st.markdown("### Database/cache-like hostname labels")
+        st.dataframe(pd.DataFrame(candidates), use_container_width=True, hide_index=True)
+        st.warning("These are DNS/certificate naming clues only. The tool did not contact any database service, test a port or attempt a login.")
+    else:
+        st.caption("No database/cache-like hostname labels appeared in the sampled public hostnames.")
+
+    provider_counts = discovery.get("provider_hint_counts", {})
+    if provider_counts:
+        st.markdown("### DNS-derived provider hints")
+        st.dataframe(
+            pd.DataFrame([{"Provider hint": key, "Matching hostname records": value} for key, value in sorted(provider_counts.items(), key=lambda item: (-item[1], item[0]))]),
+            use_container_width=True,
+            hide_index=True
+        )
+
+    shared = as_list(discovery.get("shared_public_ip_groups"))
+    if shared:
+        st.markdown("### Shared public-IP clusters")
+        st.dataframe(pd.DataFrame(shared), use_container_width=True, hide_index=True)
+        st.caption("A shared IP may be a CDN, reverse proxy or shared hosting endpoint; it does not prove a shared origin or database.")
+
+    http_rows = as_list(discovery.get("http_head_metadata"))
+    if http_rows:
+        st.markdown("### Optional HTTPS root HEAD metadata")
+        st.dataframe(pd.DataFrame([{
+            "Hostname": item.get("hostname"),
+            "Method": item.get("method"),
+            "Status": item.get("status"),
+            "Headers": ", ".join(item.get("headers", {}).keys()),
+            "Security-header presence": item.get("security_header_presence", {}),
+            "Error": item.get("error", "")
+        } for item in http_rows]), use_container_width=True, hide_index=True)
+
+    with st.expander("Scope notes, sources and limitations"):
+        for note in as_list(group.get("scope_notes")):
+            st.write(f"• {note}")
+        for limit in as_list(discovery.get("limits")):
+            st.write(f"• {limit}")
+        for source in as_list(group.get("sources")):
+            url = source.get("url")
+            if url:
+                st.markdown(f"- [{source.get('label', 'Source')}]({url})")
+
+
 def render_limits(report: dict[str, Any]) -> None:
     st.markdown("### What this dataset cannot establish")
     for item in as_list(report.get("limits")):
@@ -510,13 +630,15 @@ def main() -> None:
 
     facts = read_json(FACTS_FILE)
     assumptions = read_json(ASSUMPTIONS_FILE)
-    upload = st.sidebar.file_uploader("Upload scan or intelligence JSON", type=["json"])
+    upload = st.sidebar.file_uploader("Upload scan, intelligence or group report JSON", type=["json"])
 
     local_options = ["Built-in Ten demo snapshot"]
     if (ROOT / "architecture_intelligence.json").exists():
         local_options.append("Local architecture_intelligence.json")
     if (ROOT / "endpoint_map.json").exists():
         local_options.append("Local endpoint_map.json")
+    if (ROOT / "group_intelligence_report.json").exists():
+        local_options.append("Local group_intelligence_report.json")
     source = st.sidebar.radio("Or load a local file", local_options, index=0)
 
     facts_upload = st.sidebar.file_uploader("Optional company facts JSON", type=["json"], key="facts_upload")
@@ -536,6 +658,8 @@ def main() -> None:
                 raw = read_json(ROOT / "architecture_intelligence.json")
             elif source == "Local endpoint_map.json":
                 raw = read_json(ROOT / "endpoint_map.json")
+            elif source == "Local group_intelligence_report.json":
+                raw = read_json(ROOT / "group_intelligence_report.json")
             else:
                 raw = read_json(SAMPLE_REPORT)
             report = make_report(raw, facts, assumptions)
@@ -554,20 +678,22 @@ def main() -> None:
     )
     st.caption(f"Target: {target_url}  ·  Dataset: {source_label}  ·  Generated: {report.get('generated_at', 'sample snapshot')}")
 
-    tabs = st.tabs(["Overview", "Endpoint map", "Integrations", "Architecture", "Scale & storage", "Company facts", "Evidence & limits"])
+    tabs = st.tabs(["Group & subdomains", "Overview", "Endpoint map", "Integrations", "Architecture", "Scale & storage", "Company facts", "Evidence & limits"])
     with tabs[0]:
-        render_overview(report)
+        render_group_scope(report)
     with tabs[1]:
-        render_routes(report)
+        render_overview(report)
     with tabs[2]:
-        render_integrations(report)
+        render_routes(report)
     with tabs[3]:
-        render_architecture(report)
+        render_integrations(report)
     with tabs[4]:
-        render_scale(report)
+        render_architecture(report)
     with tabs[5]:
-        render_facts(report)
+        render_scale(report)
     with tabs[6]:
+        render_facts(report)
+    with tabs[7]:
         render_limits(report)
 
     st.sidebar.divider()
@@ -575,7 +701,7 @@ def main() -> None:
     st.sidebar.download_button(
         "Download current report JSON",
         data=json.dumps(report, indent=2, ensure_ascii=False).encode("utf-8"),
-        file_name="architecture_intelligence.json",
+        file_name="group_intelligence_report.json" if report.get("report_type") == "group_intelligence" else "architecture_intelligence.json",
         mime="application/json",
         use_container_width=True,
     )
