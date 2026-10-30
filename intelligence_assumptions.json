@@ -1,0 +1,70 @@
+{
+  "notes": [
+    "Traffic, event, storage and MAU values are explicit planning assumptions, not scan measurements.",
+    "Monthly cost rates are editable illustrative GBP values, not vendor quotes.",
+    "The model excludes AI inference, SaaS licences, staffing, security/compliance, multi-region disaster recovery, object storage, search and enterprise support."
+  ],
+  "unit_rates_gbp": {
+    "db_storage_per_gb_month": 0.15,
+    "backup_storage_per_gb_month": 0.05,
+    "egress_per_gb": 0.08
+  },
+  "scenarios": {
+    "low": {
+      "monthly_active_share_of_active_members": 0.10,
+      "api_requests_per_mau_per_month": 25,
+      "peak_to_average_multiplier": 8,
+      "profile_kb_per_member": 5,
+      "events_per_member_month": 10,
+      "event_kb": 0.5,
+      "retention_months": 12,
+      "database_overhead_multiplier": 2,
+      "backup_storage_multiplier": 1.5
+    },
+    "base": {
+      "monthly_active_share_of_active_members": 0.30,
+      "api_requests_per_mau_per_month": 100,
+      "peak_to_average_multiplier": 10,
+      "profile_kb_per_member": 20,
+      "events_per_member_month": 50,
+      "event_kb": 1,
+      "retention_months": 12,
+      "database_overhead_multiplier": 2,
+      "backup_storage_multiplier": 1.5
+    },
+    "high": {
+      "monthly_active_share_of_active_members": 0.60,
+      "api_requests_per_mau_per_month": 300,
+      "peak_to_average_multiplier": 12,
+      "profile_kb_per_member": 100,
+      "events_per_member_month": 200,
+      "event_kb": 2,
+      "retention_months": 12,
+      "database_overhead_multiplier": 2.5,
+      "backup_storage_multiplier": 1.5
+    }
+  },
+  "monthly_cost_profiles_gbp": {
+    "low": {
+      "db_compute": 250,
+      "app_compute": 250,
+      "cache": 50,
+      "observability": 50,
+      "egress_gb": 200
+    },
+    "base": {
+      "db_compute": 1000,
+      "app_compute": 1200,
+      "cache": 200,
+      "observability": 200,
+      "egress_gb": 1000
+    },
+    "high": {
+      "db_compute": 4000,
+      "app_compute": 5000,
+      "cache": 800,
+      "observability": 800,
+      "egress_gb": 5000
+    }
+  }
+}
