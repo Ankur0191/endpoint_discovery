@@ -1,0 +1,567 @@
+{
+  "report_schema_version": "1.0",
+  "report_type": "illustrative_snapshot",
+  "generated_at": "2026-10-30T06:39:00+00:00",
+  "target": {
+    "url": "https://tenlifestylegroup.com/",
+    "host": "tenlifestylegroup.com",
+    "root_domain_hint": "tenlifestylegroup.com"
+  },
+  "scan_quality": {
+    "completed_at": "2026-10-30T05:54:13+00:00",
+    "pages_visited": 200,
+    "page_limit": 200,
+    "max_depth": 3,
+    "concurrency": 15,
+    "browser_restarts": 0,
+    "scan_errors": 4,
+    "page_limit_reached": true
+  },
+  "observed_inventory": {
+    "endpoint_records": 3796,
+    "observed_request_records": 3724,
+    "unverified_js_candidates": 72,
+    "record_occurrence_sum": 20939,
+    "javascript_assets": 512,
+    "pages": 200,
+    "first_party_endpoint_records": 608,
+    "first_party_occurrence_sum": 9876,
+    "first_party_resource_types": {
+      "document": 206,
+      "fetch": 1,
+      "stylesheet": 91,
+      "script": 73,
+      "ping": 1,
+      "font": 9,
+      "image": 217,
+      "other": 1,
+      "media": 7,
+      "xhr": 2
+    },
+    "first_party_fetch_xhr_ping_route_records": 4,
+    "host_count": 58,
+    "unique_normalized_routes": 820,
+    "first_party_fetch_xhr_ping_routes": [
+      {
+        "method": "GET",
+        "url": "https://tenlifestylegroup.com/",
+        "query_parameter_names": [
+          "maxResults",
+          "playlistId",
+          "rest_route"
+        ],
+        "resource_type": "xhr",
+        "status_codes": [
+          200
+        ],
+        "occurrences": 4,
+        "category": "xhr_or_fetch",
+        "discovered_by": [
+          "browser_network_observation"
+        ]
+      },
+      {
+        "method": "POST",
+        "url": "https://tenlifestylegroup.com/cdn-cgi/challenge-platform/{challenge-path-redacted}",
+        "query_parameter_names": [],
+        "resource_type": "xhr",
+        "status_codes": [
+          200
+        ],
+        "occurrences": 1,
+        "category": "xhr_or_fetch",
+        "discovered_by": [
+          "browser_network_observation"
+        ]
+      },
+      {
+        "method": "POST",
+        "url": "https://tenlifestylegroup.com/wp-admin/admin-ajax.php",
+        "query_parameter_names": [],
+        "resource_type": "fetch",
+        "status_codes": [
+          200
+        ],
+        "occurrences": 4,
+        "category": "administrative_or_internal_candidate",
+        "discovered_by": [
+          "browser_network_observation"
+        ]
+      },
+      {
+        "method": "POST",
+        "url": "https://tenlifestylegroup.com/wp-json/track-the-click/v3/click/1",
+        "query_parameter_names": [],
+        "resource_type": "ping",
+        "status_codes": [],
+        "occurrences": 2,
+        "category": "api",
+        "discovered_by": [
+          "browser_network_observation"
+        ]
+      }
+    ]
+  },
+  "technology_evidence": [
+    {
+      "technology_or_pattern": "WordPress public website CMS",
+      "confidence": "high",
+      "observed_clues": [
+        "/wp-admin/admin-ajax.php",
+        "/wp-content/ assets",
+        "/wp-json/ route"
+      ],
+      "limitations": "Public web CMS only; not the private member-platform backend."
+    },
+    {
+      "technology_or_pattern": "Elementor page-builder assets",
+      "confidence": "high",
+      "observed_clues": [
+        "/wp-content/plugins/elementor/ assets"
+      ],
+      "limitations": "Public front-end asset evidence."
+    },
+    {
+      "technology_or_pattern": "Cloudflare challenge / edge integration",
+      "confidence": "medium",
+      "observed_clues": [
+        "/cdn-cgi/ challenge path",
+        "challenges.cloudflare.com/turnstile/"
+      ],
+      "limitations": "Does not prove every backend origin or service is behind Cloudflare."
+    },
+    {
+      "technology_or_pattern": "Google analytics / tag / advertising ecosystem",
+      "confidence": "high",
+      "observed_clues": [
+        "www.google-analytics.com",
+        "www.googletagmanager.com",
+        "doubleclick.net"
+      ],
+      "limitations": "Does not disclose the internal analytics warehouse."
+    },
+    {
+      "technology_or_pattern": "HubSpot forms and tracking",
+      "confidence": "high",
+      "observed_clues": [
+        "api.hubspot.com",
+        "forms.hsforms.com",
+        "track.hubspot.com"
+      ],
+      "limitations": "Integration traffic does not prove HubSpot is the member system of record."
+    }
+  ],
+  "third_party_integrations": [
+    {
+      "vendor": "Google Analytics / Tag Manager / Ads",
+      "hosts": [
+        "ad.doubleclick.net",
+        "analytics.google.com",
+        "www.google-analytics.com",
+        "www.googletagmanager.com"
+      ],
+      "endpoint_records": 2272,
+      "observed_occurrences": 3990
+    },
+    {
+      "vendor": "HubSpot Forms / CRM tracking",
+      "hosts": [
+        "api.hubapi.com",
+        "api.hubspot.com",
+        "forms.hsforms.com",
+        "track.hubspot.com"
+      ],
+      "endpoint_records": 107,
+      "observed_occurrences": 2895
+    },
+    {
+      "vendor": "Hotjar analytics",
+      "hosts": [
+        "content.hotjar.io",
+        "metrics.hotjar.io",
+        "script.hotjar.com"
+      ],
+      "endpoint_records": 33,
+      "observed_occurrences": 1172
+    },
+    {
+      "vendor": "Meta Pixel / Facebook",
+      "hosts": [
+        "connect.facebook.net",
+        "www.facebook.com"
+      ],
+      "endpoint_records": 142,
+      "observed_occurrences": 863
+    },
+    {
+      "vendor": "LinkedIn Insight / Ads",
+      "hosts": [
+        "px.ads.linkedin.com",
+        "px4.ads.linkedin.com",
+        "snap.licdn.com"
+      ],
+      "endpoint_records": 382,
+      "observed_occurrences": 783
+    },
+    {
+      "vendor": "VisibilityKit",
+      "hosts": [
+        "api.visibilitykit.ai",
+        "cdn.visibilitykit.ai"
+      ],
+      "endpoint_records": 5,
+      "observed_occurrences": 594
+    },
+    {
+      "vendor": "YouTube",
+      "hosts": [
+        "i.ytimg.com",
+        "www.youtube.com"
+      ],
+      "endpoint_records": 41,
+      "observed_occurrences": 524
+    },
+    {
+      "vendor": "Sopro lead-generation tooling",
+      "hosts": [
+        "plugin.sopro.io",
+        "sopro-personalisation.azurewebsites.net"
+      ],
+      "endpoint_records": 179,
+      "observed_occurrences": 201
+    },
+    {
+      "vendor": "Vimeo",
+      "hosts": [
+        "f.vimeocdn.com",
+        "i.vimeocdn.com"
+      ],
+      "endpoint_records": 18,
+      "observed_occurrences": 16
+    },
+    {
+      "vendor": "Cloudflare edge / challenge",
+      "hosts": [
+        "challenges.cloudflare.com"
+      ],
+      "endpoint_records": 3,
+      "observed_occurrences": 3
+    }
+  ],
+  "normalized_routes": [
+    {
+      "host": "tenlifestylegroup.com",
+      "party": "first_party",
+      "method": "GET",
+      "route_template": "/",
+      "records": 3,
+      "occurrences": 7,
+      "resource_types": [
+        "document",
+        "xhr"
+      ],
+      "categories": [
+        "page",
+        "xhr_or_fetch"
+      ],
+      "status_codes": [
+        200,
+        301
+      ],
+      "query_parameter_names": [
+        "maxResults",
+        "page_id",
+        "playlistId",
+        "rest_route"
+      ],
+      "discovery_sources": [
+        "browser_network_observation"
+      ],
+      "classification": "browser_api_or_telemetry"
+    },
+    {
+      "host": "tenlifestylegroup.com",
+      "party": "first_party",
+      "method": "POST",
+      "route_template": "/cdn-cgi/challenge-platform/{challenge-path-redacted}",
+      "records": 1,
+      "occurrences": 1,
+      "resource_types": [
+        "xhr"
+      ],
+      "categories": [
+        "xhr_or_fetch"
+      ],
+      "status_codes": [
+        200
+      ],
+      "query_parameter_names": [],
+      "discovery_sources": [
+        "browser_network_observation"
+      ],
+      "classification": "browser_api_or_telemetry"
+    },
+    {
+      "host": "tenlifestylegroup.com",
+      "party": "first_party",
+      "method": "POST",
+      "route_template": "/wp-admin/admin-ajax.php",
+      "records": 1,
+      "occurrences": 4,
+      "resource_types": [
+        "fetch"
+      ],
+      "categories": [
+        "administrative_or_internal_candidate"
+      ],
+      "status_codes": [
+        200
+      ],
+      "query_parameter_names": [],
+      "discovery_sources": [
+        "browser_network_observation"
+      ],
+      "classification": "cms_api"
+    },
+    {
+      "host": "tenlifestylegroup.com",
+      "party": "first_party",
+      "method": "POST",
+      "route_template": "/wp-json/track-the-click/v3/click/1",
+      "records": 1,
+      "occurrences": 2,
+      "resource_types": [
+        "ping"
+      ],
+      "categories": [
+        "api"
+      ],
+      "status_codes": [],
+      "query_parameter_names": [],
+      "discovery_sources": [
+        "browser_network_observation"
+      ],
+      "classification": "cms_api"
+    }
+  ],
+  "public_company_facts": [
+    {
+      "key": "active_members_fy2026",
+      "label": "Active Members",
+      "value": 461000,
+      "unit": "people",
+      "period": "FY2026 year-end, 31 August 2026",
+      "status": "company_disclosed",
+      "definition_or_caveat": "Trailing 12-month Active Member definition; not MAU/DAU or registered account rows.",
+      "source_url": "https://www.londonstockexchange.com/en/news/article/TENG/full-year-2026-trading-update/17788737"
+    },
+    {
+      "key": "hsbc_premier_eligible_platform_reach",
+      "label": "HSBC UK Premier customers reached by fully digital platform",
+      "value": 1000000,
+      "unit": "people_at_least",
+      "period": "FY2026 second-half launch",
+      "status": "company_disclosed_lower_bound",
+      "definition_or_caveat": "Audience reach, not proven active usage or database rows.",
+      "source_url": "https://www.londonstockexchange.com/en/news/article/TENG/full-year-2026-trading-update/17788737"
+    },
+    {
+      "key": "fy2025_tech_content_communications_investment",
+      "label": "Investment in technology, content and communications",
+      "value": 12.6,
+      "unit": "GBP_millions",
+      "period": "FY2025",
+      "status": "company_disclosed",
+      "definition_or_caveat": "Broad measure; not cloud/database spend.",
+      "source_url": "https://tenlifestylegroup.com/wp-content/uploads/2025/11/Ten-Lifestyle-Group-Plc-Annual-Report-and-Accounts-2025-2_compressed.pdf"
+    },
+    {
+      "key": "h1_2026_tech_content_communications_investment",
+      "label": "Investment in proprietary digital platforms, communications and technologies",
+      "value": 6.3,
+      "unit": "GBP_millions",
+      "period": "H1 FY2026",
+      "status": "company_disclosed",
+      "definition_or_caveat": "Broad investment measure; not hosting spend.",
+      "source_url": "https://tenlifestylegroup.com/2026/04/22/we-are-pleased-to-announce-results-for-h1-2026/"
+    },
+    {
+      "key": "h1_2026_capitalised_development_spend",
+      "label": "Capitalised development spend",
+      "value": 3.4,
+      "unit": "GBP_millions",
+      "period": "H1 FY2026",
+      "status": "company_disclosed",
+      "definition_or_caveat": "Accounting treatment for development investment; not cloud spend.",
+      "source_url": "https://tenlifestylegroup.com/2026/04/22/we-are-pleased-to-announce-results-for-h1-2026/"
+    },
+    {
+      "key": "fy2025_capitalised_development_net_carrying_amount",
+      "label": "Net carrying amount of capitalised development costs",
+      "value": 16.749,
+      "unit": "GBP_millions",
+      "period": "At 31 August 2025",
+      "status": "audited_annual_report",
+      "definition_or_caveat": "Software development asset book value; not database or infrastructure valuation.",
+      "source_url": "https://tenlifestylegroup.com/wp-content/uploads/2025/11/Ten-Lifestyle-Group-Plc-Annual-Report-and-Accounts-2025-2_compressed.pdf"
+    },
+    {
+      "key": "ten_data_engineer_advertised_stack",
+      "label": "Tools named in Ten Data Engineer vacancy",
+      "value": "SQL, Python, AWS Lambda, AWS ECS, Airflow, Snowflake, MS SQL Server, PostgreSQL, GitHub and Jira",
+      "unit": "text",
+      "period": "Public recruitment advertisement",
+      "status": "advertised_role_stack_not_deployment_attestation",
+      "definition_or_caveat": "Evidence of advertised team requirements, not confirmation each production service uses these tools.",
+      "source_url": "https://builtin.com/job/data-engineer/10174757"
+    },
+    {
+      "key": "named_member_and_staff_products",
+      "label": "Named member/staff products",
+      "value": "Ten MAID, Talia, Ten Copilot and Ten PX",
+      "unit": "text",
+      "period": "H1 FY2026 company results",
+      "status": "company_disclosed",
+      "definition_or_caveat": "Product roles imply distinct data domains but don't reveal schemas or storage engines.",
+      "source_url": "https://tenlifestylegroup.com/2026/04/22/we-are-pleased-to-announce-results-for-h1-2026/"
+    }
+  ],
+  "architecture_inferences": [
+    {
+      "area": "Public website CMS",
+      "inference": "The scanned public site is very likely WordPress and uses Elementor assets.",
+      "confidence": "high",
+      "evidence": [
+        "/wp-content/",
+        "/wp-admin/admin-ajax.php",
+        "/wp-json/",
+        "/wp-content/plugins/elementor/"
+      ],
+      "not_proven": [
+        "WordPress version",
+        "hosting provider",
+        "private member-platform stack"
+      ]
+    },
+    {
+      "area": "CMS database family",
+      "inference": "WordPress recommends MariaDB 10.11+ or MySQL 8.0+. This is an expected compatible database family, not a fingerprint of the installed database.",
+      "confidence": "high_for_WordPress_architecture_only",
+      "evidence": [
+        "https://wordpress.org/about/requirements/"
+      ],
+      "not_proven": [
+        "configured engine/version",
+        "instance size",
+        "database size"
+      ]
+    },
+    {
+      "area": "Private member / concierge platform",
+      "inference": "The private member platform was not identified by this public marketing-site crawl.",
+      "confidence": "high_that_scan_is_insufficient",
+      "evidence": [
+        "Only a small number of first-party Fetch/XHR/ping routes were observed; these are CMS, tracking or edge-challenge related."
+      ],
+      "not_proven": [
+        "member API",
+        "identity provider",
+        "booking/request store",
+        "messaging store",
+        "cloud architecture"
+      ]
+    },
+    {
+      "area": "Advertised data-engineering stack",
+      "inference": "A public Data Engineer vacancy names SQL, Python, AWS Lambda/ECS, Airflow, Snowflake, MS SQL Server and PostgreSQL, and describes data ingestion, a central data store, APIs and feeds.",
+      "confidence": "medium_to_high_for_advertised_team_requirements",
+      "evidence": [
+        "https://builtin.com/job/data-engineer/10174757"
+      ],
+      "not_proven": [
+        "which databases back each member-facing product",
+        "whether AWS is the sole cloud",
+        "production topology"
+      ]
+    }
+  ],
+  "capacity_and_cost_scenarios": {
+    "method": "Assumption-based capacity and storage model, not measured production usage.",
+    "cloud_cost_conclusion": "Not estimated. Public evidence does not reveal cloud resources, topology, negotiated rates or cloud-cost allocation.",
+    "scenarios": [
+      {
+        "scenario": "low",
+        "assumption_label": "Low utilization",
+        "monthly_active_users_modelled": 46100,
+        "monthly_active_share_assumed": 0.1,
+        "modelled_api_requests_per_month": 1152500,
+        "average_api_requests_per_day": 38417,
+        "average_requests_per_second": 0.44,
+        "peak_requests_per_second_modelled": 3.56,
+        "profile_storage_raw_gb": 2.31,
+        "event_storage_raw_gb": 2.77,
+        "primary_database_storage_estimate_gb": 10.14,
+        "backup_storage_estimate_gb": 15.21,
+        "storage_assumptions": {
+          "profile_kb_per_active_member": 5,
+          "events_per_mau_month": 10,
+          "average_event_kb": 0.5,
+          "retention_months": 12,
+          "database_overhead_multiplier": 2,
+          "backup_storage_multiplier": 1.5
+        }
+      },
+      {
+        "scenario": "base",
+        "assumption_label": "Base utilization",
+        "monthly_active_users_modelled": 138300,
+        "monthly_active_share_assumed": 0.3,
+        "modelled_api_requests_per_month": 13830000,
+        "average_api_requests_per_day": 461000,
+        "average_requests_per_second": 5.34,
+        "peak_requests_per_second_modelled": 53.36,
+        "profile_storage_raw_gb": 9.22,
+        "event_storage_raw_gb": 82.98,
+        "primary_database_storage_estimate_gb": 184.4,
+        "backup_storage_estimate_gb": 276.6,
+        "storage_assumptions": {
+          "profile_kb_per_active_member": 20,
+          "events_per_mau_month": 50,
+          "average_event_kb": 1,
+          "retention_months": 12,
+          "database_overhead_multiplier": 2,
+          "backup_storage_multiplier": 1.5
+        }
+      },
+      {
+        "scenario": "high",
+        "assumption_label": "High utilization",
+        "monthly_active_users_modelled": 276600,
+        "monthly_active_share_assumed": 0.6,
+        "modelled_api_requests_per_month": 82980000,
+        "average_api_requests_per_day": 2766000,
+        "average_requests_per_second": 32.01,
+        "peak_requests_per_second_modelled": 384.17,
+        "profile_storage_raw_gb": 46.1,
+        "event_storage_raw_gb": 1327.68,
+        "primary_database_storage_estimate_gb": 3434.45,
+        "backup_storage_estimate_gb": 5151.67,
+        "storage_assumptions": {
+          "profile_kb_per_active_member": 100,
+          "events_per_mau_month": 200,
+          "average_event_kb": 2,
+          "retention_months": 12,
+          "database_overhead_multiplier": 2.5,
+          "backup_storage_multiplier": 1.5
+        }
+      }
+    ]
+  },
+  "limits": [
+    "The crawler reached the 200-page limit; discovery was bounded.",
+    "Browser-observed traffic does not represent unique users or database operations.",
+    "Third-party analytics and tracking dominate the host inventory.",
+    "Request and response bodies were not captured; private schemas and records cannot be inferred.",
+    "The scan does not establish the private member-platform architecture or cloud/database costs."
+  ]
+}
