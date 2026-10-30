@@ -106,6 +106,7 @@ class EndpointMapper:
         allow_origins: list[str],
         inspect_js: bool,
         max_browser_restarts: int,
+        concurrency: int,
     ):
         self.start_url = start_url
         self.max_pages = max_pages
@@ -117,6 +118,7 @@ class EndpointMapper:
         self.allowed_origins = set(allow_origins)
         self.inspect_js = inspect_js
         self.max_browser_restarts = max_browser_restarts
+        self.concurrency = concurrency
 
         self.endpoints: dict[tuple[str, str], dict[str, Any]] = {}
         self.pages: dict[str, dict[str, Any]] = {}
@@ -268,9 +270,9 @@ class EndpointMapper:
         )
 
     async def crawl_one(
-        self, page: Page, url: str, depth: int, parent: str | None
+        self, context: BrowserContext, url: str, depth: int, parent: str | None
     ) -> list[str]:
-        """Navigate an existing page; reusing one page is more stable than spawning hundreds."""
+        """Open this URL in its own tab, observe it, then close the tab."""
         clean_url = normalize_url(url)
         if clean_url in self.visited or len(self.visited) >= self.max_pages or not self.allowed(url):
             return []
@@ -284,12 +286,17 @@ class EndpointMapper:
             }
             return []
 
+        # Reserve the page before the first await so parallel workers cannot
+        # exceed max_pages by all passing the limit check at the same time.
         self.visited.add(clean_url)
+        page: Page | None = None
         outgoing: list[str] = []
         title = ""
         status = None
         error = None
         try:
+            page = await context.new_page()
+            await self.attach_observers(page)
             response = await page.goto(url, wait_until="domcontentloaded", timeout=30000)
             status = response.status if response else None
             try:
@@ -312,7 +319,7 @@ class EndpointMapper:
                         continue
                     outgoing.append(clean)
         except TargetClosedError:
-            # Let run() recover/restart Chromium and retry this URL.
+            # The worker will recover the browser/context if needed and retry.
             raise
         except Exception as exc:
             error = str(exc)[:500]
@@ -327,6 +334,12 @@ class EndpointMapper:
                 "outgoing_same_origin_links": len(outgoing),
                 "error": error,
             }
+            if page is not None:
+                try:
+                    if not page.is_closed():
+                        await page.close()
+                except Exception:
+                    pass
 
         if self.delay:
             await asyncio.sleep(self.delay)
@@ -336,10 +349,10 @@ class EndpointMapper:
         async with async_playwright() as playwright:
             browser: Browser | None = None
             context: BrowserContext | None = None
-            page: Page | None = None
+            recovery_lock = asyncio.Lock()
 
             async def start_session() -> None:
-                nonlocal browser, context, page
+                nonlocal browser, context
                 browser = await playwright.chromium.launch(headless=not self.headed)
                 browser.on("disconnected", lambda *_args: self._note_browser_disconnect())
 
@@ -349,76 +362,132 @@ class EndpointMapper:
                 context = await browser.new_context(**context_args)
                 context.on("close", lambda *_args: self._note_context_close())
 
-                page = await context.new_page()
-                await self.attach_observers(page)
-
             async def recover_session(reason: str) -> None:
-                nonlocal browser, context, page
-                if self.browser_restarts >= self.max_browser_restarts:
-                    raise RuntimeError(
-                        f"Browser recovery limit reached ({self.max_browser_restarts}). "
-                        f"Last failure: {reason}"
-                    )
-                self.browser_restarts += 1
-                self._restarting = True
-                try:
-                    if browser is not None and browser.is_connected():
-                        try:
-                            await browser.close()
-                        except Exception:
-                            pass
-                finally:
-                    self._restarting = False
-                browser = None
-                context = None
-                page = None
-                await start_session()
-
-            async def ensure_page() -> Page:
-                nonlocal browser, context, page
-                if browser is None or not browser.is_connected() or context is None or context.is_closed():
-                    await recover_session("browser or context was already closed")
-                elif page is None or page.is_closed():
+                nonlocal browser, context
+                async with recovery_lock:
+                    # Another worker may already have recovered the shared session.
+                    if (
+                        browser is not None
+                        and browser.is_connected()
+                        and context is not None
+                        and not context.is_closed()
+                    ):
+                        return
+                    if self.browser_restarts >= self.max_browser_restarts:
+                        raise RuntimeError(
+                            f"Browser recovery limit reached ({self.max_browser_restarts}). "
+                            f"Last failure: {reason}"
+                        )
+                    self.browser_restarts += 1
+                    self._restarting = True
                     try:
-                        page = await context.new_page()
-                        await self.attach_observers(page)
-                    except TargetClosedError as exc:
-                        await recover_session(str(exc))
-                if page is None or page.is_closed():
-                    raise TargetClosedError("Could not create a usable page after recovery")
-                return page
+                        if browser is not None and browser.is_connected():
+                            try:
+                                await browser.close()
+                            except Exception:
+                                pass
+                    finally:
+                        self._restarting = False
+                    browser = None
+                    context = None
+                    await start_session()
 
             await start_session()
-            queue: list[tuple[str, int, str | None]] = [(self.start_url, 0, None)]
 
-            while queue and len(self.visited) < self.max_pages:
-                url, depth, parent = queue.pop(0)
-                try:
-                    active_page = await ensure_page()
-                    discovered = await self.crawl_one(active_page, url, depth, parent)
-                    queue.extend((candidate, depth + 1, url) for candidate in discovered)
-                except TargetClosedError as exc:
-                    self.errors.append({
-                        "url": normalize_url(url),
-                        "error": f"Browser/page closed during navigation; retrying after recovery: {str(exc)[:350]}",
-                    })
+            queue: asyncio.Queue[tuple[str, int, str | None] | None] = asyncio.Queue()
+            await queue.put((self.start_url, 0, None))
+
+            async def worker(worker_number: int) -> None:
+                while True:
+                    item = await queue.get()
+                    if item is None:
+                        queue.task_done()
+                        return
+
+                    url, depth, parent = item
+                    clean_url = normalize_url(url)
                     try:
-                        await recover_session(str(exc))
-                        queue.insert(0, (url, depth, parent))
-                    except Exception as recovery_error:
+                        if clean_url in self.visited or len(self.visited) >= self.max_pages:
+                            continue
+
+                        discovered: list[str] = []
+                        completed = False
+                        # A tab can close independently; retry it once. If the
+                        # browser/context itself died, one worker restarts it
+                        # and the others reuse the recovered context.
+                        for attempt in range(2):
+                            try:
+                                if (
+                                    browser is None
+                                    or not browser.is_connected()
+                                    or context is None
+                                    or context.is_closed()
+                                ):
+                                    await recover_session("browser/context unavailable before navigation")
+                                if context is None:
+                                    raise TargetClosedError("No active browser context")
+                                discovered = await self.crawl_one(context, url, depth, parent)
+                                completed = True
+                                break
+                            except TargetClosedError as exc:
+                                self.visited.discard(clean_url)
+                                if attempt == 1:
+                                    self.errors.append({
+                                        "url": clean_url,
+                                        "error": f"Page/context closed twice; skipped after retry: {str(exc)[:350]}",
+                                    })
+                                    break
+                                try:
+                                    await recover_session(str(exc))
+                                except Exception as recovery_error:
+                                    self.errors.append({
+                                        "url": clean_url,
+                                        "error": f"Browser recovery failed: {str(recovery_error)[:350]}",
+                                    })
+                                    break
+
+                        if completed:
+                            for candidate in discovered:
+                                await queue.put((candidate, depth + 1, url))
+                    except Exception as exc:
+                        self.visited.discard(clean_url)
                         self.errors.append({
-                            "url": normalize_url(url),
-                            "error": f"Recovery failed; remaining queue not scanned: {str(recovery_error)[:350]}",
+                            "url": clean_url,
+                            "error": f"Worker {worker_number} failed: {str(exc)[:400]}",
                         })
-                        break
+                    finally:
+                        queue.task_done()
+
+            workers = [
+                asyncio.create_task(worker(index + 1))
+                for index in range(self.concurrency)
+            ]
+            await queue.join()
+            for _ in workers:
+                await queue.put(None)
+            await asyncio.gather(*workers, return_exceptions=True)
 
             if self.manual_seconds:
                 try:
-                    active_page = await ensure_page()
-                    await active_page.goto(self.start_url, wait_until="domcontentloaded", timeout=30000)
-                    print(f"\nManual exploration is open for {self.manual_seconds} seconds.")
-                    print("Visit app areas and perform normal, authorized workflows in the visible browser.")
-                    await asyncio.sleep(self.manual_seconds)
+                    if (
+                        browser is None
+                        or not browser.is_connected()
+                        or context is None
+                        or context.is_closed()
+                    ):
+                        await recover_session("browser/context unavailable before manual exploration")
+                    if context is None:
+                        raise TargetClosedError("No active browser context for manual exploration")
+                    page = await context.new_page()
+                    await self.attach_observers(page)
+                    try:
+                        await page.goto(self.start_url, wait_until="domcontentloaded", timeout=30000)
+                        print(f"\nManual exploration is open for {self.manual_seconds} seconds.")
+                        print("Use the visible browser tabs to visit app areas and exercise normal, authorized workflows.")
+                        await asyncio.sleep(self.manual_seconds)
+                    finally:
+                        if not page.is_closed():
+                            await page.close()
                 except Exception as exc:
                     self.errors.append({
                         "url": self.start_url,
@@ -442,7 +511,7 @@ class EndpointMapper:
             key=lambda item: (item["category"], item["url"], item["method"]),
         )
         return {
-            "schema_version": "1.1",
+            "schema_version": "1.2",
             "scan": {
                 "target": self.start_url,
                 "completed_at": utc_now(),
@@ -450,6 +519,7 @@ class EndpointMapper:
                 "pages_visited": len(self.visited),
                 "page_limit": self.max_pages,
                 "max_depth": self.max_depth,
+                "concurrency": self.concurrency,
                 "manual_exploration_seconds": self.manual_seconds,
                 "browser_restarts": self.browser_restarts,
                 "coverage_note": (
@@ -476,11 +546,11 @@ class EndpointMapper:
             "errors": self.errors,
         }
 
-
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Passive Playwright endpoint discovery")
     parser.add_argument("url", help="Authorized site URL, e.g. https://example.com")
     parser.add_argument("--max-pages", type=int, default=100)
+    parser.add_argument("--concurrency", type=int, default=15, help="Parallel tabs (1-15; default: 15)")
     parser.add_argument("--max-depth", type=int, default=3)
     parser.add_argument("--delay", type=float, default=0.25)
     parser.add_argument("--headed", action="store_true")
@@ -512,6 +582,8 @@ def parse_args() -> argparse.Namespace:
         or args.delay < 0
         or args.manual_seconds < 0
         or args.browser_restarts < 0
+        or args.concurrency < 1
+        or args.concurrency > 15
     ):
         parser.error("Invalid negative limit or duration")
     return args
@@ -533,6 +605,7 @@ async def main() -> int:
         allow_origins=allowed_origins,
         inspect_js=not args.no_js_inspection,
         max_browser_restarts=args.browser_restarts,
+        concurrency=args.concurrency,
     )
     report = await mapper.run()
     output = Path(args.output)
