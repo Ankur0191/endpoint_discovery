@@ -121,11 +121,11 @@ The analyzer makes **no network requests**. It separates:
 - publicly disclosed company metrics supplied in the facts JSON;
 - technology hypotheses, such as the public site's CMS;
 - low/base/high capacity and storage scenarios;
-- illustrative GBP cost scenarios driven by editable values in `intelligence_assumptions.json`.
+- publicly disclosed company technology-investment evidence, kept separate from cloud infrastructure costs.
 
-The included `ten_public_facts.json` uses public FY2026 trading-update metrics for Ten Technologies Group plc. Update it when newer company disclosures are available. The included capacity and cost numbers are example assumptions, not a prediction of Ten's actual database size, MAU, infrastructure bill, or private architecture.
+The included `ten_public_facts.json` uses public FY2026 trading-update metrics for Ten Technologies Group plc. Update it when newer company disclosures are available. The capacity and storage numbers are example assumptions, not a prediction of Ten's actual database size or MAU. The analyzer deliberately does not invent a cloud bill: the scan does not identify infrastructure resources, negotiated rates, utilisation or the company's cloud-cost allocation.
 
-For custom assessments, replace the facts JSON with verified data for the organization under assessment and edit the scenario inputs/rates. For a real internal estimate, ask the platform owner for aggregated MAU, API volume, peak concurrency, storage by data class, retention, and redacted cloud cost allocation.
+For custom assessments, replace the facts JSON with verified data for the organization under assessment and edit the scenario inputs. For a real internal estimate, ask the platform owner for aggregated MAU, API volume, peak concurrency, storage by data class, retention, and redacted cloud cost allocation.
 
 Run the standard-library tests with:
 
