@@ -61,7 +61,7 @@ Use an existing Playwright storage-state file from an authorized test account:
 python endpoint_mapper.py https://example.com --storage-state auth-state.json --headed --manual-seconds 120
 \`\`\`
 
-The crawler reuses one tab while navigating pages, rather than creating a new page for every link. If Chromium or its context closes unexpectedly, it attempts recovery and retries the current URL. Control recovery attempts with \`--browser-restarts 2\`.
+The crawler opens pages in separate tabs using a bounded worker pool. The default is 15 concurrent tabs; set --concurrency 15 (allowed range: 1–15). Tabs share one browser context, so the same login/session state is used. If Chromium or its context closes unexpectedly, the scanner attempts recovery and retries the current URL. High concurrency increases browser and target-site load; reduce to 3–5 if you see HTTP 429/503 responses or browser instability.
 
 Limit the scanner to a specific origin (default is the start URL's origin). Additional origins must be explicitly authorized and supplied separately using \`--allow-origin https://api.example.com\`.
 
