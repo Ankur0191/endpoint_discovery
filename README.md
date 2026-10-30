@@ -102,3 +102,34 @@ Use a dedicated test account. Treat the Playwright storage-state file as a passw
 - Does not crawl off-origin links by default.
 - Includes per-navigation delays, page/depth limits, and bounded browser recovery.
 - Browser traffic may still trigger normal application-side analytics or page-load side effects. Use a test environment whenever possible.
+
+
+## External architecture and capacity analysis
+
+After a scan, create an offline intelligence report from the endpoint inventory:
+
+```powershell
+python intelligence_report.py endpoint_map.json --facts ten_public_facts.json --assumptions intelligence_assumptions.json --output-prefix architecture_intelligence
+```
+
+This writes:
+- `architecture_intelligence.json`: normalized routes, first-party/third-party hosts, observed vendor integrations, technology clues, public facts, and explicit assumptions.
+- `architecture_intelligence.md`: a human-readable assessment.
+
+The analyzer makes **no network requests**. It separates:
+- observed browser evidence;
+- publicly disclosed company metrics supplied in the facts JSON;
+- technology hypotheses, such as the public site's CMS;
+- low/base/high capacity and storage scenarios;
+- illustrative GBP cost scenarios driven by editable values in `intelligence_assumptions.json`.
+
+The included `ten_public_facts.json` uses public FY2026 trading-update metrics for Ten Technologies Group plc. Update it when newer company disclosures are available. The included capacity and cost numbers are example assumptions, not a prediction of Ten's actual database size, MAU, infrastructure bill, or private architecture.
+
+For custom assessments, replace the facts JSON with verified data for the organization under assessment and edit the scenario inputs/rates. For a real internal estimate, ask the platform owner for aggregated MAU, API volume, peak concurrency, storage by data class, retention, and redacted cloud cost allocation.
+
+Run the standard-library tests with:
+
+```powershell
+python -m unittest discover -s tests
+```
+
