@@ -341,13 +341,13 @@ class EndpointMapper:
             async def start_session() -> None:
                 nonlocal browser, context, page
                 browser = await playwright.chromium.launch(headless=not self.headed)
-                browser.on("disconnected", self._note_browser_disconnect)
+                browser.on("disconnected", lambda *_args: self._note_browser_disconnect())
 
                 context_args: dict[str, Any] = {}
                 if self.storage_state:
                     context_args["storage_state"] = self.storage_state
                 context = await browser.new_context(**context_args)
-                context.on("close", self._note_context_close)
+                context.on("close", lambda *_args: self._note_context_close())
 
                 page = await context.new_page()
                 await self.attach_observers(page)
