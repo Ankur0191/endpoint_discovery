@@ -5,3 +5,6 @@ auth-state.json
 storage-state*.json
 endpoint_map*.json
 playwright-report/
+
+architecture_intelligence*.json
+architecture_intelligence*.md
