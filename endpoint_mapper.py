@@ -17,7 +17,15 @@ from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qsl, urlencode, urljoin, urlsplit, urlunsplit
 
-from playwright.async_api import async_playwright, BrowserContext, Page, Request, Response
+from playwright.async_api import (
+    async_playwright,
+    Browser,
+    BrowserContext,
+    Page,
+    Request,
+    Response,
+    TargetClosedError,
+)
 
 SENSITIVE_QUERY_KEYS = re.compile(
     r"(token|access_token|refresh_token|auth|authorization|session|key|secret|password|code|jwt|sig|signature)",
@@ -87,9 +95,17 @@ def is_http(url: str) -> bool:
 
 class EndpointMapper:
     def __init__(
-        self, start_url: str, max_pages: int, max_depth: int, delay: float,
-        manual_seconds: int, headed: bool, storage_state: str | None,
-        allow_origins: list[str], inspect_js: bool,
+        self,
+        start_url: str,
+        max_pages: int,
+        max_depth: int,
+        delay: float,
+        manual_seconds: int,
+        headed: bool,
+        storage_state: str | None,
+        allow_origins: list[str],
+        inspect_js: bool,
+        max_browser_restarts: int,
     ):
         self.start_url = start_url
         self.max_pages = max_pages
@@ -100,15 +116,33 @@ class EndpointMapper:
         self.storage_state = storage_state
         self.allowed_origins = set(allow_origins)
         self.inspect_js = inspect_js
+        self.max_browser_restarts = max_browser_restarts
+
         self.endpoints: dict[tuple[str, str], dict[str, Any]] = {}
         self.pages: dict[str, dict[str, Any]] = {}
         self.assets: dict[str, dict[str, Any]] = {}
         self.errors: list[dict[str, str]] = []
         self.visited: set[str] = set()
-        self.context: BrowserContext | None = None
+        self.browser_restarts = 0
+        self._closing = False
+        self._restarting = False
 
     def allowed(self, url: str) -> bool:
         return is_http(url) and origin_of(url) in self.allowed_origins
+
+    def _note_browser_disconnect(self) -> None:
+        if not self._closing and not self._restarting:
+            self.errors.append({
+                "url": self.start_url,
+                "error": "Chromium disconnected unexpectedly; scanner will attempt recovery.",
+            })
+
+    def _note_context_close(self) -> None:
+        if not self._closing and not self._restarting:
+            self.errors.append({
+                "url": self.start_url,
+                "error": "Browser context closed unexpectedly; scanner will attempt recovery.",
+            })
 
     def record_request(self, request: Request) -> None:
         url = request.url
@@ -160,18 +194,18 @@ class EndpointMapper:
         if response.status not in rec["status_codes"]:
             rec["status_codes"].append(response.status)
         try:
-            ct = response.headers.get("content-type", "")
-            if ct and ct not in rec["content_types"]:
-                rec["content_types"].append(ct)
+            content_type = response.headers.get("content-type", "")
+            if content_type and content_type not in rec["content_types"]:
+                rec["content_types"].append(content_type)
         except Exception:
             pass
         if self.inspect_js and req.resource_type == "script" and response.status < 400:
-            ct = ""
+            content_type = ""
             try:
-                ct = response.headers.get("content-type", "")
+                content_type = response.headers.get("content-type", "")
             except Exception:
                 pass
-            if "javascript" in ct or urlsplit(req.url).path.endswith(".js"):
+            if "javascript" in content_type or urlsplit(req.url).path.endswith(".js"):
                 await self.inspect_script(response)
 
     async def inspect_script(self, response: Response) -> None:
@@ -224,23 +258,33 @@ class EndpointMapper:
 
     async def attach_observers(self, page: Page) -> None:
         page.on("request", self.record_request)
-        page.on("response", lambda response: asyncio.create_task(self.record_response(response)))
-        page.on("websocket", lambda ws: self.add_candidate(ws.url, "websocket_observation"))
+        page.on(
+            "response",
+            lambda response: asyncio.create_task(self.record_response(response)),
+        )
+        page.on(
+            "websocket",
+            lambda websocket: self.add_candidate(websocket.url, "websocket_observation"),
+        )
 
-    async def crawl_one(self, context: BrowserContext, url: str, depth: int, parent: str | None) -> list[str]:
+    async def crawl_one(
+        self, page: Page, url: str, depth: int, parent: str | None
+    ) -> list[str]:
+        """Navigate an existing page; reusing one page is more stable than spawning hundreds."""
         clean_url = normalize_url(url)
         if clean_url in self.visited or len(self.visited) >= self.max_pages or not self.allowed(url):
             return []
         if SENSITIVE_PATH.search(urlsplit(url).path):
             self.pages[clean_url] = {
-                "url": clean_url, "status": None, "depth": depth,
+                "url": clean_url,
+                "status": None,
+                "depth": depth,
                 "parent": normalize_url(parent) if parent else None,
                 "skipped": "potentially state-changing path",
             }
             return []
+
         self.visited.add(clean_url)
-        page = await context.new_page()
-        await self.attach_observers(page)
         outgoing: list[str] = []
         title = ""
         status = None
@@ -267,50 +311,138 @@ class EndpointMapper:
                     if path.endswith(SKIP_EXTENSIONS) or SENSITIVE_PATH.search(path):
                         continue
                     outgoing.append(clean)
+        except TargetClosedError:
+            # Let run() recover/restart Chromium and retry this URL.
+            raise
         except Exception as exc:
             error = str(exc)[:500]
             self.errors.append({"url": clean_url, "error": error})
         finally:
             self.pages[clean_url] = {
-                "url": clean_url, "title": title, "status": status,
-                "depth": depth, "parent": normalize_url(parent) if parent else None,
-                "outgoing_same_origin_links": len(outgoing), "error": error,
+                "url": clean_url,
+                "title": title,
+                "status": status,
+                "depth": depth,
+                "parent": normalize_url(parent) if parent else None,
+                "outgoing_same_origin_links": len(outgoing),
+                "error": error,
             }
-            await page.close()
+
         if self.delay:
             await asyncio.sleep(self.delay)
         return outgoing
 
     async def run(self) -> dict[str, Any]:
         async with async_playwright() as playwright:
-            browser = await playwright.chromium.launch(headless=not self.headed)
-            context_args: dict[str, Any] = {}
-            if self.storage_state:
-                context_args["storage_state"] = self.storage_state
-            context = await browser.new_context(**context_args)
-            queue: list[tuple[str, int, str | None]] = [(self.start_url, 0, None)]
-            while queue and len(self.visited) < self.max_pages:
-                url, depth, parent = queue.pop(0)
-                discovered = await self.crawl_one(context, url, depth, parent)
-                queue.extend((candidate, depth + 1, url) for candidate in discovered)
-            if self.manual_seconds:
+            browser: Browser | None = None
+            context: BrowserContext | None = None
+            page: Page | None = None
+
+            async def start_session() -> None:
+                nonlocal browser, context, page
+                browser = await playwright.chromium.launch(headless=not self.headed)
+                browser.on("disconnected", self._note_browser_disconnect)
+
+                context_args: dict[str, Any] = {}
+                if self.storage_state:
+                    context_args["storage_state"] = self.storage_state
+                context = await browser.new_context(**context_args)
+                context.on("close", self._note_context_close)
+
                 page = await context.new_page()
                 await self.attach_observers(page)
+
+            async def recover_session(reason: str) -> None:
+                nonlocal browser, context, page
+                if self.browser_restarts >= self.max_browser_restarts:
+                    raise RuntimeError(
+                        f"Browser recovery limit reached ({self.max_browser_restarts}). "
+                        f"Last failure: {reason}"
+                    )
+                self.browser_restarts += 1
+                self._restarting = True
                 try:
-                    await page.goto(self.start_url, wait_until="domcontentloaded", timeout=30000)
-                    print(f"Manual exploration is open for {self.manual_seconds} seconds.")
-                    print("Use the browser to visit application areas and perform normal, authorized workflows.")
+                    if browser is not None and browser.is_connected():
+                        try:
+                            await browser.close()
+                        except Exception:
+                            pass
+                finally:
+                    self._restarting = False
+                browser = None
+                context = None
+                page = None
+                await start_session()
+
+            async def ensure_page() -> Page:
+                nonlocal browser, context, page
+                if browser is None or not browser.is_connected() or context is None or context.is_closed():
+                    await recover_session("browser or context was already closed")
+                elif page is None or page.is_closed():
+                    try:
+                        page = await context.new_page()
+                        await self.attach_observers(page)
+                    except TargetClosedError as exc:
+                        await recover_session(str(exc))
+                if page is None or page.is_closed():
+                    raise TargetClosedError("Could not create a usable page after recovery")
+                return page
+
+            await start_session()
+            queue: list[tuple[str, int, str | None]] = [(self.start_url, 0, None)]
+
+            while queue and len(self.visited) < self.max_pages:
+                url, depth, parent = queue.pop(0)
+                try:
+                    active_page = await ensure_page()
+                    discovered = await self.crawl_one(active_page, url, depth, parent)
+                    queue.extend((candidate, depth + 1, url) for candidate in discovered)
+                except TargetClosedError as exc:
+                    self.errors.append({
+                        "url": normalize_url(url),
+                        "error": f"Browser/page closed during navigation; retrying after recovery: {str(exc)[:350]}",
+                    })
+                    try:
+                        await recover_session(str(exc))
+                        queue.insert(0, (url, depth, parent))
+                    except Exception as recovery_error:
+                        self.errors.append({
+                            "url": normalize_url(url),
+                            "error": f"Recovery failed; remaining queue not scanned: {str(recovery_error)[:350]}",
+                        })
+                        break
+
+            if self.manual_seconds:
+                try:
+                    active_page = await ensure_page()
+                    await active_page.goto(self.start_url, wait_until="domcontentloaded", timeout=30000)
+                    print(f"\nManual exploration is open for {self.manual_seconds} seconds.")
+                    print("Visit app areas and perform normal, authorized workflows in the visible browser.")
                     await asyncio.sleep(self.manual_seconds)
                 except Exception as exc:
-                    self.errors.append({"url": self.start_url, "error": f"manual session: {str(exc)[:400]}"})
-                finally:
-                    await page.close()
-            await context.close()
-            await browser.close()
+                    self.errors.append({
+                        "url": self.start_url,
+                        "error": f"manual exploration session: {str(exc)[:400]}",
+                    })
 
-        endpoints = sorted(self.endpoints.values(), key=lambda item: (item["category"], item["url"], item["method"]))
+            self._closing = True
+            try:
+                if context is not None and not context.is_closed():
+                    await context.close()
+            except Exception:
+                pass
+            try:
+                if browser is not None and browser.is_connected():
+                    await browser.close()
+            except Exception:
+                pass
+
+        endpoints = sorted(
+            self.endpoints.values(),
+            key=lambda item: (item["category"], item["url"], item["method"]),
+        )
         return {
-            "schema_version": "1.0",
+            "schema_version": "1.1",
             "scan": {
                 "target": self.start_url,
                 "completed_at": utc_now(),
@@ -319,6 +451,7 @@ class EndpointMapper:
                 "page_limit": self.max_pages,
                 "max_depth": self.max_depth,
                 "manual_exploration_seconds": self.manual_seconds,
+                "browser_restarts": self.browser_restarts,
                 "coverage_note": (
                     "Not a guarantee of 100% endpoint coverage. Results are limited to observed browser "
                     "traffic and paths extracted from loaded JavaScript during this run."
@@ -332,6 +465,7 @@ class EndpointMapper:
                 "pages": len(self.pages),
                 "javascript_assets": len(self.assets),
                 "errors": len(self.errors),
+                "browser_restarts": self.browser_restarts,
                 "by_category": dict(Counter(item["category"] for item in endpoints)),
                 "by_method": dict(Counter(item["method"] for item in endpoints)),
                 "by_status": dict(Counter(str(code) for item in endpoints for code in item["status_codes"])),
@@ -351,22 +485,43 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--delay", type=float, default=0.25)
     parser.add_argument("--headed", action="store_true")
     parser.add_argument("--manual-seconds", type=int, default=0)
-    parser.add_argument("--storage-state", help="Playwright storage-state file for a dedicated test account")
-    parser.add_argument("--allow-origin", action="append", default=[],
-                        help="Additional explicitly authorized origin; repeat for multiple origins")
+    parser.add_argument(
+        "--storage-state",
+        help="Playwright storage-state file for a dedicated test account",
+    )
+    parser.add_argument(
+        "--allow-origin",
+        action="append",
+        default=[],
+        help="Additional explicitly authorized origin; repeat for multiple origins",
+    )
     parser.add_argument("--no-js-inspection", action="store_true")
+    parser.add_argument(
+        "--browser-restarts",
+        type=int,
+        default=2,
+        help="Automatic Chromium restarts if the browser/context crashes (default: 2)",
+    )
     parser.add_argument("--output", "-o", default="endpoint_map.json")
     args = parser.parse_args()
     if not args.url.startswith(("http://", "https://")):
         parser.error("URL must start with http:// or https://")
-    if args.max_pages < 1 or args.max_depth < 0 or args.delay < 0 or args.manual_seconds < 0:
+    if (
+        args.max_pages < 1
+        or args.max_depth < 0
+        or args.delay < 0
+        or args.manual_seconds < 0
+        or args.browser_restarts < 0
+    ):
         parser.error("Invalid negative limit or duration")
     return args
 
 
 async def main() -> int:
     args = parse_args()
-    allowed_origins = [origin_of(args.url)] + [origin.rstrip("/") for origin in args.allow_origin]
+    allowed_origins = [origin_of(args.url)] + [
+        origin.rstrip("/") for origin in args.allow_origin
+    ]
     mapper = EndpointMapper(
         start_url=args.url,
         max_pages=args.max_pages,
@@ -377,12 +532,18 @@ async def main() -> int:
         storage_state=args.storage_state,
         allow_origins=allowed_origins,
         inspect_js=not args.no_js_inspection,
+        max_browser_restarts=args.browser_restarts,
     )
     report = await mapper.run()
     output = Path(args.output)
-    output.write_text(json.dumps(report, indent=2, ensure_ascii=False), encoding="utf-8")
+    output.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False),
+        encoding="utf-8",
+    )
     print(json.dumps(report["summary"], indent=2))
     print(f"\nReport written to: {output.resolve()}")
+    if report["errors"]:
+        print(f"Completed with {len(report['errors'])} warning/error record(s). Check the JSON errors array.")
     return 0
 
 
