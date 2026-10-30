@@ -1,4 +1,4 @@
-name: Python validation
+name: Python and frontend validation
 
 on:
   push:
@@ -17,9 +17,19 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.14"
-      - name: Install application, dashboard and intelligence dependencies
-        run: python -m pip install -r requirements.txt -r requirements-dashboard.txt -r requirements-intelligence.txt
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install Python dependencies
+        run: python -m pip install -r requirements.txt -r requirements-intelligence.txt
       - name: Compile Python modules
-        run: python -m py_compile endpoint_mapper.py intelligence_report.py scope_discovery.py group_intelligence.py dashboard.py
-      - name: Run unit tests
+        run: python -m py_compile endpoint_mapper.py intelligence_report.py scope_discovery.py group_intelligence.py
+      - name: Run Python unit tests
         run: python -m unittest discover -s tests -t .
+      - name: Install Vite dependencies
+        working-directory: web_dashboard
+        run: npm install
+      - name: Build Vite dashboard
+        working-directory: web_dashboard
+        run: npm run build
