@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0",
+  "scan": {
+    "target": "https://example.com",
+    "coverage_note": "Observed browser traffic and static client-side candidates only; not guaranteed complete."
+  },
+  "summary": {
+    "total_endpoint_records": 0,
+    "observed_requests": 0,
+    "unverified_candidates": 0,
+    "pages": 0,
+    "javascript_assets": 0,
+    "errors": 0,
+    "by_category": {},
+    "by_method": {},
+    "by_status": {}
+  },
+  "endpoints": [],
+  "pages": [],
+  "assets": [],
+  "errors": []
+}
