@@ -1,0 +1,60 @@
+{
+  "company": "Ten Technologies Group plc (formerly Ten Lifestyle Group plc)",
+  "facts": [
+    {
+      "key": "active_members_fy2026",
+      "label": "Active Members",
+      "value": 461000,
+      "unit": "people",
+      "period": "FY2026 year-end, 31 August 2026",
+      "status": "company_disclosed_in_16_September_2026_trading_update",
+      "definition_or_caveat": "The company defines Active Members as eligible members who used the platform in the previous twelve months. This is not MAU, DAU, unique login rows or total eligible members.",
+      "source_url": "https://www.londonstockexchange.com/en/news/article/TENG/full-year-2026-trading-update/17788737",
+      "source_date": "2026-09-16"
+    },
+    {
+      "key": "active_members_fy2025",
+      "label": "Active Members (prior year)",
+      "value": 375000,
+      "unit": "people",
+      "period": "FY2025 year-end",
+      "status": "company_disclosed_comparator",
+      "definition_or_caveat": "Same Active Member definition as FY2026 comparator.",
+      "source_url": "https://www.londonstockexchange.com/en/news/article/TENG/full-year-2026-trading-update/17788737",
+      "source_date": "2026-09-16"
+    },
+    {
+      "key": "hsbc_premier_eligible_platform_reach",
+      "label": "HSBC UK Premier customers reached by new fully digital lifestyle platform",
+      "value": 1000000,
+      "unit": "people_at_least",
+      "period": "FY2026 second-half launch",
+      "status": "company_disclosed_lower_bound",
+      "definition_or_caveat": "The trading update says the platform was launched to over one million customers. This is audience reach, not proven active users or registered database rows.",
+      "source_url": "https://www.londonstockexchange.com/en/news/article/TENG/full-year-2026-trading-update/17788737",
+      "source_date": "2026-09-16"
+    },
+    {
+      "key": "fy2026_net_revenue_gbp_millions",
+      "label": "Expected FY2026 Net Revenue",
+      "value": 69.7,
+      "unit": "GBP_millions",
+      "period": "Year ended 31 August 2026",
+      "status": "company_expectation_in_trading_update_not_audited_actual",
+      "definition_or_caveat": "Approximately £69.7m expected; not a technology or cloud budget.",
+      "source_url": "https://www.londonstockexchange.com/en/news/article/TENG/full-year-2026-trading-update/17788737",
+      "source_date": "2026-09-16"
+    },
+    {
+      "key": "fy2026_adjusted_ebitda_gbp_millions",
+      "label": "Expected FY2026 Adjusted EBITDA",
+      "value": 16.1,
+      "unit": "GBP_millions",
+      "period": "Year ended 31 August 2026",
+      "status": "company_expectation_in_trading_update_not_audited_actual",
+      "definition_or_caveat": "Approximately £16.1m expected; not a technology or cloud budget.",
+      "source_url": "https://www.londonstockexchange.com/en/news/article/TENG/full-year-2026-trading-update/17788737",
+      "source_date": "2026-09-16"
+    }
+  ]
+}
