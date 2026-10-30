@@ -17,66 +17,76 @@ Only scan systems for which you have explicit authorization. The scanner is desi
 
 ## Install
 
-Python 3.10+
+Use Python 3.10 or newer. Playwright's current PyPI release metadata lists classifiers through Python 3.14; for now, use Python 3.14 rather than an unlisted newer interpreter when troubleshooting browser/runtime issues.
 
-```bash
-python -m venv .venv
-# Windows PowerShell:
-.\.venv\Scripts\Activate.ps1
-# macOS/Linux:
+Windows PowerShell:
+
+\`\`\`powershell
+py -3.14 -m venv .venv
+.\\.venv\\Scripts\\Activate.ps1
+
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+python -m playwright install chromium
+\`\`\`
+
+macOS/Linux:
+
+\`\`\`bash
+python3.14 -m venv .venv
 source .venv/bin/activate
 
-pip install -r requirements.txt
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
 python -m playwright install chromium
-```
+\`\`\`
 
 ## Run
 
 Basic crawl:
 
-```bash
+\`\`\`bash
 python endpoint_mapper.py https://example.com --max-pages 150 --max-depth 3 --output endpoint_map.json
-```
+\`\`\`
 
 Visible browser with time to sign in and explore manually:
 
-```bash
+\`\`\`bash
 python endpoint_mapper.py https://example.com --headed --manual-seconds 180 --max-pages 200 --output endpoint_map.json
-```
+\`\`\`
 
 Use an existing Playwright storage-state file from an authorized test account:
 
-```bash
+\`\`\`bash
 python endpoint_mapper.py https://example.com --storage-state auth-state.json --headed --manual-seconds 120
-```
+\`\`\`
 
-Limit the scanner to a specific origin (default is the start URL's origin). Do not enable cross-origin crawling unless you own or have permission to assess those hosts.
+The crawler reuses one tab while navigating pages, rather than creating a new page for every link. If Chromium or its context closes unexpectedly, it attempts recovery and retries the current URL. Control recovery attempts with \`--browser-restarts 2\`.
 
-```bash
-python endpoint_mapper.py https://app.example.com --max-pages 250 --delay 0.4
-```
+Limit the scanner to a specific origin (default is the start URL's origin). Additional origins must be explicitly authorized and supplied separately using \`--allow-origin https://api.example.com\`.
 
 ## Output
 
 The JSON report includes:
-- `scan`: start URL, timestamps, limits, and coverage caveat
-- `summary`: counts by category, method, status and source
-- `endpoints`: deduplicated URL+method observations
-- `pages`: visited pages and crawl metadata
-- `assets`: JavaScript assets inspected
-- `errors`: navigation and response-observation errors
+- \`scan\`: start URL, timestamps, limits, recovery count, and coverage caveat
+- \`summary\`: counts by category, method, status, and browser restarts
+- \`endpoints\`: deduplicated URL+method observations
+- \`pages\`: visited pages and crawl metadata
+- \`assets\`: JavaScript assets inspected
+- \`errors\`: navigation, response-observation, and browser-recovery errors
 
-Each endpoint contains a normalized URL (query values redacted by default), method, category, resource type, status codes, content types, referring pages, discovery sources, and whether authentication-related headers/cookies were present. Secret values and request/response bodies are never written to the report.
+Each endpoint contains a normalized URL (sensitive query values redacted by default), method, category, resource type, status codes, content types, referring pages, discovery sources, and whether authentication-related headers/cookies were present. Secret values and request/response bodies are never written to the report.
 
 ## Authentication state
 
-Create a storage-state file only for a dedicated test account. Do not commit it to Git. Add it to `.gitignore`. Treat it as a password because it can contain session cookies.
+Use a dedicated test account. Treat the Playwright storage-state file as a password because it can contain session cookies. It is excluded by \`.gitignore\`; never commit it.
 
 ## Safety and privacy
 
-- Uses GET-style navigation and passive browser observation; manual interaction is controlled by the operator.
-- Does not record Authorization header values, cookies, request bodies, response bodies, or query parameter values.
-- Redacts common token-like query parameters.
+- Uses passive browser observation and bounded same-origin page crawling.
+- Does not brute-force paths, fuzz parameters, exploit endpoints, or attempt authentication bypasses.
+- Does not record Authorization values, cookies, request bodies, or response bodies.
+- Redacts common token-like query parameter values.
 - Does not crawl off-origin links by default.
-- Includes a per-navigation delay and page/depth limits.
-- Browser traffic may still trigger application-side analytics or normal page-load side effects. Use a test environment whenever possible.
+- Includes per-navigation delays, page/depth limits, and bounded browser recovery.
+- Browser traffic may still trigger normal application-side analytics or page-load side effects. Use a test environment whenever possible.
