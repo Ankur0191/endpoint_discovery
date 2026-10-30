@@ -65,12 +65,16 @@ def safe_url(url):
     return f"{p.scheme}://{p.netloc}{path}"
 
 def make_scenarios(active, assumptions):
+    """Model capacity and data volume using explicit, editable user assumptions.
+
+    Profile storage is modelled against the 12-month Active Member population.
+    Monthly event generation is modelled against the scenario's MAU population.
+    No infrastructure-cost estimate is emitted because the scan does not reveal
+    the deployed cloud topology or provider pricing.
+    """
     result = []
-    unit = assumptions.get("unit_rates_gbp", {})
-    profiles = assumptions.get("monthly_cost_profiles_gbp", {})
     for name in ("low", "base", "high"):
         s = assumptions.get("scenarios", {}).get(name, {})
-        c = profiles.get(name, {})
         share = float(s.get("monthly_active_share_of_active_members", 0))
         reqs_per_mau = float(s.get("api_requests_per_mau_per_month", 0))
         mau = round(active * share)
@@ -79,16 +83,13 @@ def make_scenarios(active, assumptions):
         avg_rps = daily / 86400
         peak_rps = avg_rps * float(s.get("peak_to_average_multiplier", 10))
         profile_gb = active * float(s.get("profile_kb_per_member", 20)) / 1_000_000
-        event_gb = active * float(s.get("events_per_member_month", 0)) * float(s.get("event_kb", 1)) * float(s.get("retention_months", 12)) / 1_000_000
+        events_per_mau_month = float(s.get("events_per_mau_month", s.get("events_per_member_month", 0)))
+        event_gb = mau * events_per_mau_month * float(s.get("event_kb", 1)) * float(s.get("retention_months", 12)) / 1_000_000
         primary_gb = (profile_gb + event_gb) * float(s.get("database_overhead_multiplier", 2))
         backup_gb = primary_gb * float(s.get("backup_storage_multiplier", 1.5))
-        db = float(c.get("db_compute", 0)); app = float(c.get("app_compute", 0))
-        cache = float(c.get("cache", 0)); obs = float(c.get("observability", 0))
-        egress = float(c.get("egress_gb", 0)) * float(unit.get("egress_per_gb", 0))
-        storage = primary_gb * float(unit.get("db_storage_per_gb_month", 0))
-        backup = backup_gb * float(unit.get("backup_storage_per_gb_month", 0))
         result.append({
-            "scenario": name, "monthly_active_users_modelled": mau,
+            "scenario": name,
+            "monthly_active_users_modelled": mau,
             "monthly_active_share_assumed": share,
             "api_requests_per_mau_per_month_assumed": reqs_per_mau,
             "modelled_api_requests_per_month": monthly_reqs,
@@ -97,14 +98,11 @@ def make_scenarios(active, assumptions):
             "peak_requests_per_second_modelled": round(peak_rps, 2),
             "primary_database_storage_estimate_gb": round(primary_gb, 2),
             "backup_storage_estimate_gb": round(backup_gb, 2),
+            "profile_storage_raw_gb": round(profile_gb, 2),
+            "retained_event_storage_raw_gb": round(event_gb, 2),
             "storage_assumptions": s,
-            "illustrative_monthly_cost_gbp": {
-                "database_compute": db, "application_compute": app, "cache": cache,
-                "observability": obs, "database_storage": round(storage,2),
-                "backup_storage": round(backup,2), "network_egress": round(egress,2),
-                "total": round(db+app+cache+obs+storage+backup+egress,2)
-            },
-            "cost_note": "Illustrative editable inputs, not observed vendor pricing or company spend."
+            "cost_estimate": None,
+            "cost_note": "Not estimated: public evidence does not disclose provider, service topology, resource sizing, negotiated rates or workload metrics."
         })
     return result
 
@@ -169,12 +167,24 @@ def analyze(scan, facts, assumptions):
         "observed_inventory":{"endpoint_records":len(eps),"observed_request_records":sum(1 for e in eps if e.get("method")!="UNKNOWN"),"unverified_js_candidates":sum(1 for e in eps if e.get("method")=="UNKNOWN"),"summed_endpoint_occurrences":sum(int(e.get("occurrences",0) or 0) for e in eps),"javascript_assets":len(assets),"pages":len(pages),"first_party_endpoint_records":len(first),"first_party_occurrences":sum(int(e.get("occurrences",0) or 0) for e in first),"first_party_resource_types":dict(Counter(e.get("resource_type","unknown") for e in first)),"first_party_fetch_xhr_ping_records":len(api_first),"first_party_fetch_xhr_ping_routes":api_first,"unique_normalized_routes":len(route_rows),"host_count":len(hosts)},
         "technology_evidence":tech,"third_party_integrations":vendor_rows,"host_inventory":host_rows,"normalized_routes":route_rows,
         "public_company_facts":facts_list,
-        "capacity_and_cost_scenarios":{"method":"Assumption-based model, not measured production usage or actual cloud spend.","scenarios":make_scenarios(active,assumptions) if active else [],"excluded_costs":["AI/LLM inference","vendor SaaS licences","staff and engineering","security/compliance tooling","multi-region disaster recovery","object storage for files/media","search infrastructure","database licensing/support","taxes and negotiated discounts"]},
+        "advertised_data_engineering_evidence":[f for f in facts_list if f.get("key") in {"ten_data_engineer_advertised_stack","ten_data_engineer_responsibility_model"}],
+        "product_and_data_domain_evidence":[f for f in facts_list if f.get("key") in {"named_member_and_staff_products","corporate_client_and_supplier_scale","digital_platform_geographic_coverage"}],
+        "technology_investment_facts":[f for f in facts_list if "investment" in f.get("key","") or "capitalised_development" in f.get("key","")],
+        "capacity_and_cost_scenarios":{"method":"Assumption-based capacity/storage model, not measured production load. API calls and database storage depend on editable utilization and retention assumptions.","scenarios":make_scenarios(active,assumptions) if active else [],"infrastructure_cost_conclusion":"Not estimated. The website scan cannot identify actual cloud resources, service topology, negotiated prices, usage-based charges or the fraction of the company's broader technology investment spent on hosting.","excluded_cost_categories":["AI/LLM inference","vendor SaaS licences","staff and engineering","security/compliance tooling","multi-region disaster recovery","object storage for files/media","search infrastructure","database licensing/support","taxes and negotiated discounts"]},
         "architecture_inferences":[
             {"area":"Public website CMS","inference":"The scanned public site is very likely WordPress and uses Elementor assets.","confidence":"high","evidence":["/wp-content/","/wp-admin/admin-ajax.php","/wp-json/","/wp-content/plugins/elementor/"],"not_proven":["WordPress version","hosting provider","private member-platform stack"]},
             {"area":"CMS database family","inference":"WordPress currently recommends MariaDB 10.11+ or MySQL 8.0+. This is the expected database family for the CMS, not a fingerprint of the installed engine/version.","confidence":"high_for_WordPress_architecture_only","evidence":["https://wordpress.org/about/requirements/"],"not_proven":["configured engine/version","instance size","database size","whether member services share this database"]},
-            {"area":"Private member / concierge platform","inference":"The private member platform was not identified by this public marketing-site crawl.","confidence":"high_that_scan_is_insufficient","evidence":["Only a small number of first-party Fetch/XHR/ping routes were observed; these are CMS, tracking or edge-challenge related."],"not_proven":["member API","identity provider","booking/request store","messaging store","cloud architecture"]}
+            {"area":"Private member / concierge platform","inference":"The private member platform was not identified by this public marketing-site crawl.","confidence":"high_that_scan_is_insufficient","evidence":["Only a small number of first-party Fetch/XHR/ping routes were observed; these are CMS, tracking or edge-challenge related."],"not_proven":["member API","identity provider","booking/request store","messaging store","cloud architecture"]},
+            {"area":"Advertised data-engineering stack","inference":"A public Ten Data Engineer advertisement names SQL, Python, AWS Lambda/ECS, Airflow, Snowflake, MS SQL Server and PostgreSQL, and describes API/data-feed ingestion, a unified central data store, data modelling and database optimisation. This is meaningful evidence of the advertised data team's toolset and responsibilities.","confidence":"medium_to-high_for_advertised_team_requirements_not_universal_deployment","evidence":["https://builtin.com/job/data-engineer/10174757"],"not_proven":["Which databases back each member-facing product","Whether AWS is the sole cloud","Production versions, topology, database sizes or regional replication"]},
+            {"area":"Likely logical data domains","inference":"The disclosed product set and advertised data-engineering remit imply data domains for member/programme identity, member profiles and preferences, concierge requests/cases, bookings and supplier data, engagement/personalisation events, agent workflows, and client reporting/analytics.","confidence":"medium_as_product-domain_inference","evidence":["Ten MAID described as an internal customer/request management system","Talia member assistant, Ten Copilot staff assistant and Ten PX member engagement/personalisation platform described in H1 2026 results","Data Engineer advert describes ingestion, central data store, APIs/feeds and reporting"],"not_proven":["Actual table/collection schemas","Whether data is split across SQL Server, PostgreSQL, Snowflake or other stores","Storage volume, retention and sensitivity classification"]}
         ],
+        "technology_investment_assessment":{
+            "conclusion":"Company-disclosed technology investment provides a defensible broad spending envelope, but not a cloud/database bill.",
+            "annualized_h1_2026_technology_investment_gbp_millions":12.6,
+            "basis":"H1 FY2026 £6.3m over six months multiplied by two; arithmetic run-rate illustration, not a forecast.",
+            "fy2025_technology_content_communications_investment_gbp_millions":12.6,
+            "cloud_or_database_share":"Not disclosed and not inferable from the public website scan."
+        },
         "limits":["The page limit was reached; this scan was bounded and is not exhaustive.","Browser-observed requests are not counts of unique users or database operations.","Third-party analytics and tracking dominate the observed host inventory.","No request/response bodies were captured, so private schemas and record contents cannot be inferred.","No database ports, internal hosts, credentials, tokens or private network services were probed."]
     }
 
@@ -193,13 +203,23 @@ def render_markdown(r):
         shown=f"£{val}m" if unit=="GBP_millions" else (f">{int(val):,}" if unit=="people_at_least" else (f"{int(val):,}" if unit=="people" else str(val)))
         src=f.get("source_url","")
         lines.append(f"| {f.get('label')} | {shown} | {f.get('period','')}; {f.get('definition_or_caveat','')} | {src} |")
+    lines += ["","## Advertised data stack and product architecture clues","","| Evidence | Publicly stated details | What it supports |","|---|---|---|"]
+    for f in r.get("advertised_data_engineering_evidence", []):
+        lines.append(f"| {f.get('label')} | {f.get('value')} | {f.get('definition_or_caveat','')} |")
+    for f in r.get("product_and_data_domain_evidence", []):
+        lines.append(f"| {f.get('label')} | {f.get('value')} | {f.get('definition_or_caveat','')} |")
+    lines += ["","The combined public evidence is consistent with a layered system: member-facing digital applications and channels; operational CRM/request workflow; booking/supplier integrations; data ingestion and feeds; an analytics/reporting store; and personalisation/AI services. This is a logical architecture hypothesis from disclosed products and a recruitment brief, not a reverse-engineered service map.","","### Likely data domains (hypothesis, not observed schemas)","","- Member eligibility, client programme configuration, identity references and profiles/preferences.","- Concierge requests, case/workflow state, Lifestyle Manager handoffs and service history.","- Reservations/bookings, supplier catalogue, offers/benefits, availability and transaction references.","- Engagement events, channel activity, segmentation, personalisation and campaign outcomes.","- Agent/AI interactions and quality signals, plus internal/client analytics and reporting.","",""]
     lines += ["","## Capacity and database-size scenarios","","These are illustrative assumptions, not measured load or actual database size.","","| Scenario | Modelled MAU | Avg API calls/day | Peak RPS | Primary DB estimate |","|---|---:|---:|---:|---:|"]
     for s in r["capacity_and_cost_scenarios"]["scenarios"]: lines.append(f"| {s['scenario'].title()} | {s['monthly_active_users_modelled']:,} | {s['average_api_requests_per_day']:,} | {s['peak_requests_per_second_modelled']:.1f} | {s['primary_database_storage_estimate_gb']:,.1f} GB |")
-    lines += ["","### Illustrative monthly infrastructure cost","","Editable assumptions only; not cloud provider quotes or Ten's actual spend.","","| Scenario | DB compute | App compute | Storage + backup | Cache + monitoring | Egress | Total/month |","|---|---:|---:|---:|---:|---:|---:|"]
-    for s in r["capacity_and_cost_scenarios"]["scenarios"]:
-        c=s["illustrative_monthly_cost_gbp"]
-        lines.append(f"| {s['scenario'].title()} | £{c['database_compute']:,.0f} | £{c['application_compute']:,.0f} | £{c['database_storage']+c['backup_storage']:,.0f} | £{c['cache']+c['observability']:,.0f} | £{c['network_egress']:,.0f} | £{c['total']:,.0f} |")
-    lines += ["","## What cannot be established","","- Actual private-platform DB engine, size, schema, replicas, backups or cloud provider.","- Exact MAU/DAU or registered account rows from this public-site crawl.","- Actual production load or infrastructure costs.","","## Next authorized evidence to request","","1. App/API domains and mobile app identifiers in scope.","2. Synthetic test account and permission to exercise normal member journeys.","3. Sanitized OpenAPI/API inventory.","4. Aggregated member activity, API volume, peak concurrency, storage-by-data-class and retention metrics.","5. Redacted cloud billing allocation to validate cost assumptions.","","## Limitations"]
+    lines += ["","### Publicly disclosed technology investment envelope","","This is the strongest public cost signal found. It covers proprietary platforms, technologies, content and communications; it is **not** a hosting/database/cloud bill.","","| Measure | Amount | Interpretation |","|---|---:|---|"]
+    investment_keys = {"fy2025_tech_content_communications_investment","h1_2026_tech_content_communications_investment","h1_2026_capitalised_development_spend","fy2025_capitalised_development_additions","fy2025_capitalised_development_net_carrying_amount"}
+    for f in r["public_company_facts"]:
+        if f.get("key") not in investment_keys:
+            continue
+        shown = f"£{float(f['value']):,.3f}m" if f.get("unit") == "GBP_millions" else str(f.get("value"))
+        lines.append(f"| {f['label']} | {shown} | {f.get('definition_or_caveat','')} |")
+    lines += ["","The £6.3m H1 FY2026 investment annualises arithmetically to £12.6m/year, equal to FY2025's disclosed £12.6m investment measure. This indicates a broadly similar spending pace, not a FY2026 forecast. Capitalised software-development expenditure and carrying value are accounting measures, not cloud costs.","","**Cloud/database cost:** no defensible external estimate is available from the present scan. The cloud/database share of the investment envelope is not disclosed.",""]
+    lines += ["","## What cannot be established","","- Actual private-platform DB engine, size, schema, replicas, backups or cloud provider.","- Exact MAU/DAU or registered account rows from this public-site crawl.","- Actual production load or cloud/database infrastructure costs; the publicly disclosed technology-investment measure is broader and includes content and communications.","","## Next authorized evidence to request","","1. App/API domains and mobile app identifiers in scope.","2. Synthetic test account and permission to exercise normal member journeys.","3. Sanitized OpenAPI/API inventory.","4. Aggregated member activity, API volume, peak concurrency, storage-by-data-class and retention metrics.","5. Redacted cloud billing allocation to validate cost assumptions.","","## Limitations"]
     lines += ["- "+x for x in r["limits"]]
     return "\n".join(lines)+"\n"
 
